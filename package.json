@@ -1,0 +1,9 @@
+{
+	"dependencies": {
+		"axios": "^0.24.0",
+		"knex": "^0.95.14",
+		"mathjs": "^10.0.0",
+		"node-binance-api": "^0.13.1",
+		"sqlite3": "^5.0.2"
+	}
+}
