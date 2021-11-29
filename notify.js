@@ -58,7 +58,7 @@ async function notifyBuyOrderSuccess(symbol, quantity, price) {
   const text = `## 交易通知
   #### **币种**：${symbol}
   #### **类型**：<font color="#008000">买单</font>
-  #### **买单价格**：<font color="#008000">${round(price, 6)}</font>
+  #### **挂买单价格**：<font color="#008000">${round(price, 6)}</font>
   #### **买单数量**：<font color="#008000">${round(quantity, 6)}</font>
   #### **时间**：${dateFormat()}
 
@@ -69,7 +69,7 @@ async function notifyBuyOrderSuccess(symbol, quantity, price) {
 async function notifyBuyOrderFail(symbol, info) {
   const text = `## 交易通知
   #### **币种**：${symbol}
-  #### **类型**：<font color="#ff0000">买单失败</font>
+  #### **类型**：<font color="#ff0000">挂买单失败</font>
   >${info}
   
   #### **时间**：${dateFormat()}
@@ -78,13 +78,12 @@ async function notifyBuyOrderFail(symbol, info) {
   await notify(text)
 }
 
-async function notifySellOrderSuccess(symbol, quantity, price, profit) {
+async function notifySellOrderSuccess(symbol, quantity, price) {
   const text = `## 交易通知
   #### **币种**：${symbol}
-  #### **类型**：<font color="#ff0000">卖单</font>
-  #### **卖单价格**：<font color="#008000">${round(price, 6)}</font>
+  #### **类型**：<font color="#008000">买单</font>
+  #### **挂卖单价格**：<font color="#008000">${round(price, 6)}</font>
   #### **卖单数量**：<font color="#008000">${round(quantity, 6)}</font>
-  #### **预计盈利**：<font color="#008000">${round(profit, 6)} USDT</font>
   #### **时间**：${dateFormat()}
 
   > author ${author}`

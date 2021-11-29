@@ -86,8 +86,8 @@ async function orderStatus(symbol, orderId) {
  * @param Number orderId
  * @param {} otherOptions https://binance-docs.github.io/apidocs/futures/cn/#trade-6
  */
-async function depth(symbol) {
-  const result = await binance.futuresDepth(symbol)
+async function depth(symbol, limit = 20) {
+  const result = await binance.futuresDepth(symbol, { limit })
   return result
 }
 
@@ -102,6 +102,36 @@ async function leverage(symbol, number) {
   return result
 }
 
+/**
+ * 获取order
+ * @param string symbol
+ * @doc https://binance-docs.github.io/apidocs/futures/cn/#trade-10
+ */
+async function getOrder(symbol, params = {}) {
+  const result = await binance.futuresAllOrders(symbol, params)
+  return result
+}
+
+/**
+ * 获取当前挂单
+ * @param string symbol
+ * @doc https://binance-docs.github.io/apidocs/futures/cn/#user_data-4
+ */
+async function getOpenOrder(symbol, params = {}) {
+  const result = await binance.futuresOpenOrders(symbol, params)
+  return result
+}
+
+/**
+ * 获取
+ * @param string symbol
+ * @doc https://binance-docs.github.io/apidocs/futures/cn/#user_data-4
+ */
+async function getExchangeInfo() {
+  const result = await binance.futuresExchangeInfo()
+  return result
+}
+
 module.exports = {
   getAccount,
   getPrices,
@@ -111,4 +141,7 @@ module.exports = {
   orderStatus,
   depth,
   leverage,
+  getOrder,
+  getOpenOrder,
+  getExchangeInfo,
 }

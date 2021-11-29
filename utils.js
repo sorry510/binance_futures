@@ -1,3 +1,4 @@
+const { round } = require('mathjs')
 const config = require('./config')
 
 async function sleep(time) {
@@ -36,8 +37,30 @@ function log(text, flag = null) {
   }
 }
 
+/**
+ * 可以正确交易的价格，否则就会返回 400 错误
+ * @param {*} price
+ * @returns Number
+ */
+function roundOrderPrice(price) {
+  if (price > 1000) {
+    return round(price, 1)
+  } else if (price > 10) {
+    return round(price, 2)
+  } else if (price > 1) {
+    return round(price, 3)
+  } else if (price > 0.1) {
+    return round(price, 4)
+  } else if (price > 0.01) {
+    return round(price, 5)
+  } else {
+    return round(price, 6)
+  }
+}
+
 module.exports = {
   sleep,
   dateFormat,
   log,
+  roundOrderPrice,
 }
