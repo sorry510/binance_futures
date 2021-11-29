@@ -71,7 +71,7 @@ async function run() {
               } else {
                 notify.notifySellOrderSuccess(
                   symbol,
-                  positionLong.executedQty,
+                  positionLong.positionAmt,
                   roundOrderPrice(positionLong.entryPrice * (1 + nowProfit / 100))
                 )
                 await sleep(3 * 1000)
@@ -79,14 +79,14 @@ async function run() {
               log(result)
             } else {
               // 挂平仓的单
-              const result = await binance.sellLimit(symbol, positionLong.executedQty, sellPrice, {
+              const result = await binance.sellLimit(symbol, positionLong.positionAmt, sellPrice, {
                 positionSide,
               }) // 平仓-平多
               if (result.code) {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
-                notify.notifySellOrderSuccess(symbol, positionLong.executedQty, sellPrice)
+                notify.notifySellOrderSuccess(symbol, positionLong.positionAmt, sellPrice)
                 await sleep(3 * 1000)
               }
               log(result)
