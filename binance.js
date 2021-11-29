@@ -21,6 +21,15 @@ async function getAccount() {
 }
 
 /**
+ * @document ./doc/futuresAccount.js
+ * @returns
+ */
+async function getPosition() {
+  const result = await binance.futuresPositionRisk()
+  return result
+}
+
+/**
  * 当前所有币种价格
  * @document ./doc/futuresPrices.js
  * @returns
@@ -146,6 +155,7 @@ async function getExchangeInfo() {
 
 module.exports = {
   getAccount,
+  getPosition,
   getPrices,
   buyLimit,
   sellLimit,
