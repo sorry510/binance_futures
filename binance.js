@@ -55,6 +55,18 @@ async function sellLimit(symbol, quantity, price, otherOptions) {
 }
 
 /**
+ * 市价卖出
+ * @param string symbol
+ * @param Number quantity
+ * @param number price
+ * @param {} otherOptions https://binance-docs.github.io/apidocs/futures/cn/#trade-3
+ */
+async function sellMarket(symbol, quantity, otherOptions) {
+  const result = await binance.futuresMarketSell(symbol, quantity, otherOptions) // 市价卖出
+  return result
+}
+
+/**
  * 撤销订单
  * @param string symbol
  * @param Number orderId
@@ -123,7 +135,7 @@ async function getOpenOrder(symbol, params = {}) {
 }
 
 /**
- * 获取
+ * 获取交易信息
  * @param string symbol
  * @doc https://binance-docs.github.io/apidocs/futures/cn/#user_data-4
  */
@@ -137,6 +149,7 @@ module.exports = {
   getPrices,
   buyLimit,
   sellLimit,
+  sellMarket,
   cancelOrder,
   orderStatus,
   depth,

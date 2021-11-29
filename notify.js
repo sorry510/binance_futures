@@ -102,6 +102,37 @@ async function notifySellOrderFail(symbol, info) {
   await notify(text)
 }
 
+async function notifyCancelOrderSuccess(symbol) {
+  const text = `## 交易通知
+  #### **币种**：${symbol}
+  #### **类型**：<font color="#008000">撤销订单</font>
+  #### **时间**：${dateFormat()}
+
+  > author ${author}`
+  await notify(text)
+}
+
+async function notifyCancelOrderFail(symbol, info) {
+  const text = `## 交易通知
+  #### **币种**：${symbol}
+  #### **类型**：<font color="#ff0000">挂买单失败</font>
+  >${info}
+  
+  #### **时间**：${dateFormat()}
+
+  > author ${author}`
+  await notify(text)
+}
+
+async function notifyServiceStop() {
+  const text = `## 交易通知
+  #### **类型**：<font color="#ff0000">交易服务停止 24 小时</font>
+  #### **时间**：${dateFormat()}
+
+  > author ${author}`
+  await notify(text)
+}
+
 async function notifyServiceError(info) {
   const text = `## 交易通知
   #### **类型**：<font color="#ff0000">交易服务异常</font>
@@ -116,9 +147,16 @@ async function notifyServiceError(info) {
 module.exports = {
   notify,
   notifySymbolChange,
+
   notifyBuyOrderSuccess,
   notifyBuyOrderFail,
+
   notifySellOrderSuccess,
   notifySellOrderFail,
+
+  notifyCancelOrderSuccess,
+  notifyCancelOrderFail,
+
   notifyServiceError,
+  notifyServiceStop,
 }

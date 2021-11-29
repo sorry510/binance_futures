@@ -8,12 +8,6 @@ const { coins, sleep_time } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
 
-async function hasOrder(symbol) {
-  const orders = await binance.getOrder(symbol, { limit: 1 }) // 所有最后的订单
-  const newOrders = orders.filter(order => order.status === 'new' || order.status === 'PARTIALLY_FILLED') // 未成交或部分成交
-  return newOrders.length
-}
-
 async function getPrice(symbol) {
   const result = await binance.depth(symbol)
   function avg(data) {
@@ -34,10 +28,17 @@ async function getPrice(symbol) {
 async function run() {
   // await createTableIF() // 创建数据库
 
+  const openOrders = await binance.getOpenOrder('ONEUSDT') // 当前进行中的订单
+
+  if (openOrders.length > 0) {
+    notify.notifyServiceStop()
+    await sleep(24 * 3600 * 1000)
+  }
+
   await Promise.all(
     coins.map(async coin => {
       const positionSide = 'LONG'
-      const { symbol, usdt, profit, leverage } = coin
+      const { symbol, usdt, profit, leverage, buyTimeOut } = coin
       const openOrders = await binance.getOpenOrder(symbol) // 当前进行中的订单
       const historyOrders = (await binance.getOrder(symbol, { limit: 100 })) || []
       const historyOrdersHas = historyOrders.filter(
@@ -48,6 +49,8 @@ async function run() {
       // process.exit()
       const buyOrder = openOrders.find(item => item.side === 'BUY' && item.positionSide === positionSide) // 查询开多的单
       const sellOrder = openOrders.find(item => item.side === 'SELL' && item.positionSide === positionSide) // 查询平多的单
+
+      // 买多与平多
       if (
         lastOrder &&
         lastOrder.status === 'FILLED' &&
@@ -56,20 +59,33 @@ async function run() {
       ) {
         // 有持仓
         if (!buyOrder && !sellOrder) {
-          // 挂平仓的单
+          const nowPrice = await binance.getPrices()[symbol]
           const sellPrice = roundOrderPrice(lastOrder.avgPrice * (1 + profit / 100))
-          const result = await binance.sellLimit(symbol, lastOrder.executedQty, sellPrice, {
-            positionSide: 'LONG',
-          }) // 平仓-平多
-          if (result.code) {
-            // 报错了
-            notify.notifySellOrderFail(symbol, result.msg)
-            sleep(60 * 1000)
+          if (nowPrice > sellPrice) {
+            // 当前价格高于止盈率
+            const result = await binance.sellMarket(symbol, lastOrder.executedQty, {
+              positionSide: 'LONG',
+            })
+            if (result.code) {
+              // 报错了
+              notify.notifySellOrderFail(symbol, result.msg)
+              await sleep(60 * 1000)
+            }
+            log(result)
           } else {
-            notify.notifySellOrderSuccess(symbol, lastOrder.executedQty, sellPrice)
-            sleep(3 * 1000)
+            // 挂平仓的单
+            const result = await binance.sellLimit(symbol, lastOrder.executedQty, sellPrice, {
+              positionSide: 'LONG',
+            }) // 平仓-平多
+            if (result.code) {
+              notify.notifySellOrderFail(symbol, result.msg)
+              await sleep(60 * 1000)
+            } else {
+              notify.notifySellOrderSuccess(symbol, lastOrder.executedQty, sellPrice)
+              await sleep(3 * 1000)
+            }
+            log(result)
           }
-          log(result)
         }
       } else {
         // 无持仓
@@ -82,15 +98,39 @@ async function run() {
             positionSide,
           }) // 开仓-开多
           if (result.code) {
-            // 报错了
             notify.notifyBuyOrderFail(symbol, result.msg)
-            sleep(60 * 1000)
+            await sleep(60 * 1000)
           } else {
             notify.notifyBuyOrderSuccess(symbol, quantity, buyPrice)
-            sleep(3 * 1000)
+            await sleep(3 * 1000)
           }
           log(result)
-          // const insertedId = await knex('order').insert(result) // 写入数据库
+
+          // const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
+          //   positionSide: 'SHORT',
+          // }) // 开仓-开空
+          // if (result2.code) {
+          //   notify.notifyBuyOrderFail(symbol, result2.msg)
+          //   await sleep(60 * 1000)
+          // } else {
+          //   notify.notifyBuyOrderSuccess(symbol, quantity, buyPrice)
+          //   await sleep(3 * 1000)
+          // }
+          // log(result2)
+        } else {
+          // 有挂单，检查是否超时，超时取消挂单
+          const nowTime = +new Date()
+          if (nowTime > Number(buyOrder.updateTime) + buyTimeOut * 1000) {
+            const result = await binance.cancelOrder(symbol) // 撤销订单
+            if (result.code) {
+              notify.notifyCancelOrderFail(symbol, result.msg)
+              await sleep(60 * 1000)
+            } else {
+              notify.notifyCancelOrderSuccess(symbol)
+              await sleep(3 * 1000)
+            }
+            log(result)
+          }
         }
       }
     })
@@ -113,23 +153,13 @@ async function run() {
   // }) // 开仓-平空
 
   // const result = await binance.cancelOrder('DOTUSDT', 10250044975) // 撤销订单
-
   // const result = await binance.orderStatus('DOTUSDT', 10250044975) // 订单状态
-
   // const result = await binance.depth('DOTUSDT', 10250044975) // 深度
-
   // const result = await binance.leverage('DOTUSDT', 70) // 合约倍数
-
   // const result = await binance.getOrder('DOTUSDT') // 所有订单
 
   // console.log(JSON.stringify(result))
   // process.exit()
-
-  // const ticks = await binance.candlesticks('ADAUSDT', '1m')
-  // let last_tick = ticks[ticks.length - 1]
-  // let [time, open, high, low, close, volume, closeTime, assetVolume, trades, buyBaseVolume, buyAssetVolume, ignored] =
-  //   last_tick
-  // console.log(last_tick)
 }
 
 ;(async () => {
