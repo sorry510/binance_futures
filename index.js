@@ -53,9 +53,13 @@ async function run() {
           // 有持仓
           if (!buyOrder && !sellOrder) {
             // 不是部分买入持仓且没有挂卖单
-            const nowPrice = await binance.getPrices()[symbol]
+            const { unRealizedProfit, notional } = positionLong
+            // const nowPrice = await binance.getPrices()[symbol]
             const sellPrice = roundOrderPrice(positionLong.entryPrice * (1 + profit / 100))
-            if (nowPrice > sellPrice) {
+            // console.log(nowPrice, sellPrice, positionLong.positionAmt)
+            // process.exit()
+            const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
+            if (nowProfit > profit) {
               // 当前价格高于止盈率
               const result = await binance.sellMarket(symbol, positionLong.positionAmt, {
                 positionSide,
@@ -65,7 +69,11 @@ async function run() {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
-                notify.notifySellOrderSuccess(symbol, positionLong.executedQty, nowPrice)
+                notify.notifySellOrderSuccess(
+                  symbol,
+                  positionLong.executedQty,
+                  roundOrderPrice(positionLong.entryPrice * (1 + nowProfit / 100))
+                )
                 await sleep(3 * 1000)
               }
               log(result)
