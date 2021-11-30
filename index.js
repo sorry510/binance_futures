@@ -55,7 +55,7 @@ async function run() {
             // 不是部分买入持仓且没有挂卖单
             const { unRealizedProfit, notional } = positionLong
             // const nowPrice = await binance.getPrices()[symbol]
-            const sellPrice = roundOrderPrice(positionLong.entryPrice * (1 + profit / 100))
+            const sellPrice = roundOrderPrice(positionLong.entryPrice * (1 + profit / 100 / leverage))
             // console.log(nowPrice, sellPrice, positionLong.positionAmt)
             // process.exit()
             const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
