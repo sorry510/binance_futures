@@ -39,16 +39,19 @@ async function run() {
   await Promise.all(
     coins.map(async coin => {
       const positionSide = 'LONG'
-      const { symbol, usdt, profit, leverage, buyTimeOut } = coin
+      const positionSideShort = 'SHORT'
+      const { symbol, usdt, profit, leverage, buyTimeOut, canLong, canShort } = coin
+
+      if (!canLong && !canShort) {
+        return
+      }
+
       const openOrders = await binance.getOpenOrder(symbol) // 当前进行中的订单
-      // console.log(JSON.stringify(historyOrdersHas))
-      // process.exit()
+
       const buyOrder = openOrders.find(item => item.side === 'BUY' && item.positionSide === positionSide) // 查询开多的单
       const sellOrder = openOrders.find(item => item.side === 'SELL' && item.positionSide === positionSide) // 查询平多的单
-
       const positionLong = positions.find(item => item.symbol === symbol && item.positionSide === positionSide) // 是否有多头当前的持仓
-
-      if (positionLong) {
+      if (positionLong && canLong) {
         if (positionLong.positionAmt > 0) {
           // 有持仓
           if (!buyOrder && !sellOrder) {
@@ -96,7 +99,7 @@ async function run() {
           // 没有持仓
           if (!buyOrder) {
             // 没有挂买单
-            const { buyPrice, sellPrice } = await getPrice(symbol, positionSide)
+            const { buyPrice, sellPrice } = await getPrice(symbol)
             const quantity = round((usdt / buyPrice) * leverage, 0) // 购买数量
             await binance.leverage(symbol, leverage) // 修改合约倍数
             const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
@@ -126,7 +129,85 @@ async function run() {
             // 有挂单，检查是否超时，超时取消挂单
             const nowTime = +new Date()
             if (nowTime > Number(buyOrder.updateTime) + buyTimeOut * 1000) {
-              const result = await binance.cancelOrder(symbol) // 撤销订单
+              const result = await binance.cancelOrder(symbol, buyOrder.orderId) // 撤销订单
+              if (result.code) {
+                notify.notifyCancelOrderFail(symbol, result.msg)
+                await sleep(60 * 1000)
+              } else {
+                notify.notifyCancelOrderSuccess(symbol)
+                await sleep(3 * 1000)
+              }
+              log(result)
+            }
+          }
+        }
+      }
+
+      const buyOrderShort = openOrders.find(item => item.side === 'SELL' && item.positionSide === positionSideShort) // 查询开空的单
+      const sellOrderShort = openOrders.find(item => item.side === 'BUY' && item.positionSide === positionSideShort) // 查询平空的单
+      const positionShort = positions.find(item => item.symbol === symbol && item.positionSide === positionSideShort) // 是否有空头当前的持仓
+      // console.log(JSON.stringify(positionShort))
+      // process.exit()
+      if (positionShort && canShort) {
+        const positionAmt = Math.abs(positionShort.positionAmt) // 空单为负数
+        if (positionAmt > 0) {
+          // 有持仓
+          if (!buyOrderShort && !sellOrderShort) {
+            // 不是部分买入持仓且没有挂卖单
+            const { unRealizedProfit, notional } = positionShort
+            const sellPrice = roundOrderPrice(positionShort.entryPrice * (1 - profit / 100 / leverage))
+            const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
+            if (nowProfit > profit) {
+              // 当前价格高于止盈率
+              const result = await binance.buyMarket(symbol, positionAmt, {
+                positionSide: positionSideShort,
+              })
+              if (result.code) {
+                // 报错了
+                notify.notifySellOrderFail(symbol, result.msg)
+                await sleep(60 * 1000)
+              } else {
+                notify.notifySellOrderSuccess(symbol, positionAmt, sellPrice)
+                await sleep(3 * 1000)
+              }
+              log(result)
+            } else {
+              // 挂平仓的单
+              const result = await binance.buyLimit(symbol, positionAmt, sellPrice, {
+                positionSide: positionSideShort,
+              }) // 平仓-平空
+              if (result.code) {
+                notify.notifySellOrderFail(symbol, result.msg)
+                await sleep(60 * 1000)
+              } else {
+                notify.notifySellOrderSuccess(symbol, positionAmt, sellPrice)
+                await sleep(3 * 1000)
+              }
+              log(result)
+            }
+          }
+        } else {
+          // 没有持仓
+          if (!buyOrderShort) {
+            // 没有挂买单
+            const { sellPrice } = await getPrice(symbol)
+            const quantity = round((usdt / sellPrice) * leverage, 0) // 购买数量
+            const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
+              positionSide: positionSideShort,
+            }) // 开仓-开空
+            if (result2.code) {
+              notify.notifyBuyOrderFail(symbol, result2.msg)
+              await sleep(60 * 1000)
+            } else {
+              notify.notifyBuyOrderSuccess(symbol, quantity, sellPrice, '做空')
+              await sleep(3 * 1000)
+            }
+            log(result2)
+          } else {
+            // 有挂单，检查是否超时，超时取消挂单
+            const nowTime = +new Date()
+            if (nowTime > Number(buyOrderShort.updateTime) + buyTimeOut * 1000) {
+              const result = await binance.cancelOrder(symbol, buyOrderShort.orderId) // 撤销订单
               if (result.code) {
                 notify.notifyCancelOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
@@ -141,6 +222,17 @@ async function run() {
       }
     })
   )
+}
+
+;(async () => {
+  while (true) {
+    try {
+      await run()
+      await sleep(sleep_time * 1000)
+    } catch (e) {
+      notify.notifyServiceError(e)
+    }
+  }
 
   // const result = await binance.buyLimit('DOTUSDT', 0.5, 36, {
   //   positionSide: 'LONG',
@@ -156,7 +248,7 @@ async function run() {
 
   // const result = await binance.buyLimit('DOTUSDT', 0.5, 37.6, {
   //   positionSide: 'SHORT',
-  // }) // 开仓-平空
+  // }) // 平仓-平空
 
   // const result = await binance.cancelOrder('DOTUSDT', 10250044975) // 撤销订单
   // const result = await binance.orderStatus('DOTUSDT', 10250044975) // 订单状态
@@ -166,15 +258,4 @@ async function run() {
 
   // console.log(JSON.stringify(result))
   // process.exit()
-}
-
-;(async () => {
-  while (true) {
-    try {
-      await run()
-      await sleep(sleep_time * 1000)
-    } catch (e) {
-      notify.notifyServiceError(e)
-    }
-  }
 })()

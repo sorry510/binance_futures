@@ -8,6 +8,8 @@ module.exports = {
       profit: 2, // 止盈率
       leverage: 10, // 10倍
       buyTimeOut: 120, // 超时时间
+      canLong: true, // 开启多单
+      canShort: true, // 开启空单
     },
   ],
   dingding_token: '',

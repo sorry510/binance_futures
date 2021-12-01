@@ -64,6 +64,18 @@ async function sellLimit(symbol, quantity, price, otherOptions) {
 }
 
 /**
+ * 市价买入
+ * @param string symbol
+ * @param Number quantity
+ * @param number price
+ * @param {} otherOptions https://binance-docs.github.io/apidocs/futures/cn/#trade-3
+ */
+async function buyMarket(symbol, quantity, otherOptions) {
+  const result = await binance.futuresMarketBuy(symbol, quantity, otherOptions) // 市价买入
+  return result
+}
+
+/**
  * 市价卖出
  * @param string symbol
  * @param Number quantity
@@ -159,6 +171,7 @@ module.exports = {
   getPrices,
   buyLimit,
   sellLimit,
+  buyMarket,
   sellMarket,
   cancelOrder,
   orderStatus,
