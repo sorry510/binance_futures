@@ -114,6 +114,7 @@ async function run() {
             }
             const quantity = round((usdt / buyPrice) * leverage, 0) // 购买数量
             await binance.leverage(symbol, leverage) // 修改合约倍数
+            await binance.marginType(symbol) // 修改为逐仓模式
             const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
               positionSide,
             }) // 开仓-开多
@@ -190,6 +191,8 @@ async function run() {
               // 如果空单开除价格高于买多的价格，就不再开空单，直到买多的单平仓
               return
             }
+            await binance.leverage(symbol, leverage) // 修改合约倍数
+            await binance.marginType(symbol) // 修改为逐仓模式
             const quantity = round((usdt / sellPrice) * leverage, 0) // 购买数量
             const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
               positionSide: positionSideShort,

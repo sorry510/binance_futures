@@ -136,6 +136,17 @@ async function leverage(symbol, number) {
 }
 
 /**
+ * 合约模式 全仓与 逐仓
+ * @param string symbol
+ * @param string marginType	ENUM	YES	保证金模式 ISOLATED(逐仓), CROSSED(全仓)
+ * @doc https://binance-docs.github.io/apidocs/futures/cn/#trade-10
+ */
+async function marginType(symbol, marginType = 'ISOLATED') {
+  const result = await binance.futuresMarginType(symbol, marginType)
+  return result
+}
+
+/**
  * 获取order
  * @param string symbol
  * @doc https://binance-docs.github.io/apidocs/futures/cn/#trade-10
@@ -177,6 +188,7 @@ module.exports = {
   orderStatus,
   depth,
   leverage,
+  marginType,
   getOrder,
   getOpenOrder,
   getExchangeInfo,
