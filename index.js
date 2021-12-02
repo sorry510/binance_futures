@@ -31,8 +31,9 @@ async function run() {
   const openOrders = await binance.getOpenOrder('ONEUSDT') // 当前进行中的订单
 
   if (openOrders.length > 0) {
-    notify.notifyServiceStop()
-    await sleep(24 * 3600 * 1000)
+    // notify.notifyServiceStop()
+    await sleep(3)
+    return
   }
   const positions = await binance.getPosition() // 获取当前持有仓位
 
