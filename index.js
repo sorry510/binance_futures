@@ -26,8 +26,7 @@ async function getPrice(symbol) {
 }
 
 async function run() {
-  await createTableIF() // 创建数据库
-  process.exit()
+  // await createTableIF() // 创建数据库
 
   const openOrders = await binance.getOpenOrder('ONEUSDT') // 当前进行中的订单
 
