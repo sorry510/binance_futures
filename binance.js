@@ -2,7 +2,8 @@ const Binance = require('node-binance-api')
 const process = require('process')
 const { round } = require('mathjs')
 const config = require('./config')
-const { sleep, log, dateFormat } = require('./utils')
+const { sleep, log, dateFormat, tries } = require('./utils')
+const { knex, createTableIF } = require('./db')
 
 const binance = new Binance().options({
   APIKEY: config.api_key,
@@ -176,6 +177,18 @@ async function getExchangeInfo() {
   return result
 }
 
+/**
+ * 账户成交历史
+ * @param string symbol
+ * @param {startTime: number(13), endTime: number(13), limit: number} // startTime 和 endTime 的最大间隔为7天, limit 	返回的结果集数量 默认值:500 最大值:1000
+ * @doc https://binance-docs.github.io/apidocs/futures/cn/#user_data-7
+ * @example doc/userTrades.js
+ */
+async function getTrades(symbol, params = {}) {
+  const result = await binance.futuresUserTrades(symbol, params)
+  return result
+}
+
 module.exports = {
   getAccount,
   getPosition,
@@ -192,4 +205,23 @@ module.exports = {
   getOrder,
   getOpenOrder,
   getExchangeInfo,
+  getTrades,
 }
+
+/**
+ * 更新数据库的币种数据信息
+ */
+binance.futuresTickerStream(false, async prevDay => {
+  for (let obj of prevDay) {
+    await tries(async () => {
+      await knex('symbols').where('symbol', obj.symbol).update({
+        percentChange: obj.percentChange,
+        close: obj.close,
+        open: obj.open,
+        low: obj.low,
+        updateTime: obj.eventTime,
+      })
+    })
+    log(`${obj.symbol}:${obj.percentChange}`)
+  }
+})

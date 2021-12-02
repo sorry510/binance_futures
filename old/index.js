@@ -25,9 +25,11 @@ async function getPrice(symbol) {
   }
 }
 
+/**
+ * 多空双开，自定义交易币种
+ */
 async function run() {
   await createTableIF() // 创建数据库
-  process.exit()
 
   const openOrders = await binance.getOpenOrder('ONEUSDT') // 当前进行中的订单
 

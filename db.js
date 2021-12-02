@@ -22,8 +22,12 @@ async function createTableIF() {
         table.increments('id')
         table.string('symbol')
         table.string('quantity')
-        table.string('price')
+        table.string('percentChange')
+        table.string('close')
+        table.string('open')
+        table.string('low')
         table.integer('enable')
+        table.integer('updateTime')
       })
       .createTable('currentOrder', table => {
         table.increments('id')
@@ -61,6 +65,8 @@ async function createTableIF() {
     //   table.integer('user_id').unsigned().references('users.id')
     // })
     log('create table success', true)
+  } else {
+    log(`database has exist: ${dbFile}`)
   }
 }
 

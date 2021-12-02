@@ -58,9 +58,36 @@ function roundOrderPrice(price) {
   }
 }
 
+/**
+ * 尝试执行函数
+ * @param () =>{} fn
+ * @param number max 最大次数
+ * @param number sleepTime 失败时的休眠时间
+ * @param bool isThrow 超过最大次数时，是否抛出异常
+ * @returns
+ */
+async function tries(fn, max = 5, sleepTime = 1000, isThrow = false) {
+  let num = 0
+  let error
+  while (num++ < max) {
+    try {
+      const result = await fn()
+      return result
+    } catch (e) {
+      e = error
+      console.log(`exec failed, num is ${num}`)
+      await sleep(sleepTime)
+    }
+  }
+  if (isThrow) {
+    throw new Error(error)
+  }
+}
+
 module.exports = {
   sleep,
   dateFormat,
   log,
   roundOrderPrice,
+  tries,
 }
