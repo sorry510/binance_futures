@@ -21,4 +21,5 @@ module.exports = {
     username: 'admin',
     password: 'lb7rCmHQXWDOV',
   },
+  websocket: true,
 }

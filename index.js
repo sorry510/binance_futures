@@ -1,9 +1,6 @@
-const Binance = require('node-binance-api')
-const process = require('process')
-const fs = require('fs')
+const { exit } = require('process')
 const { round } = require('mathjs')
-const { sleep, log, dateFormat, roundOrderPrice } = require('./utils')
-const { knex, createTableIF } = require('./db')
+const { sleep, log, roundOrderPrice } = require('./utils')
 const { coins, sleep_time } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
@@ -27,6 +24,7 @@ async function getPrice(symbol) {
 
 async function run() {
   // await createTableIF() // 创建数据库
+  // const data = await tries(async () => await knex('symbols')) // 查询所有的币种
 
   const openOrders = await binance.getOpenOrder('ONEUSDT') // 当前进行中的订单
 
