@@ -163,7 +163,11 @@ async function getOrder(symbol, params = {}) {
  * @doc https://binance-docs.github.io/apidocs/futures/cn/#user_data-4
  */
 async function getOpenOrder(symbol, params = {}) {
-  const result = await binance.futuresOpenOrders(symbol, params)
+  if (symbol) {
+    const result = await binance.futuresOpenOrders(symbol, params)
+    return result
+  }
+  const result = await binance.futuresOpenOrders()
   return result
 }
 

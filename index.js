@@ -1,7 +1,7 @@
 const { exit } = require('process')
 const { round } = require('mathjs')
 const { sleep, log, roundOrderPrice } = require('./utils')
-const { coins, sleep_time } = require('./config')
+const { usdt, profit, leverage, buyTimeOut, sleep_time, excludeSymbols } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
 
@@ -24,35 +24,98 @@ async function getPrice(symbol) {
 
 async function run() {
   // await createTableIF() // 创建数据库
-  // const data = await tries(async () => await knex('symbols')) // 查询所有的币种
 
-  const openOrders = await binance.getOpenOrder('ONEUSDT') // 当前进行中的订单
+  const allSymbols = await tries(async () => await knex('symbols')) // 查询所有的币种
+  const sortAllSymbols = allSymbols
+    .map(item => ({ ...item, percentChange: Number(item.percentChange) }))
+    .sort((a, b) => (a.percentChange < b.percentChange ? -1 : 1)) // 涨幅从小到大排序
+  const sCount = sortAllSymbols.length
 
-  if (openOrders.length > 0) {
-    // notify.notifyServiceStop()
-    await sleep(3)
-    return
-  }
+  const posiSymbols = sortAllSymbols.filter(item => item.percentChange > 0) // 涨的币
+  const negaSymbols = sortAllSymbols.filter(item => item.percentChange <= 0) // 跌的币
+
+  const allOpenOrders = await binance.getOpenOrder() // 当前进行中的所有订单
   const positions = await binance.getPosition() // 获取当前持有仓位
+
+  let coins = []
+  if (posiSymbols.length < 3) {
+    // 判定所有币都在跌,只买空
+    coins.push({
+      symbol: sortAllSymbols[0].symbol,
+      canLong: false, // 开启多单
+      canShort: true, // 开启空单
+    })
+  } else if (negaSymbols.length < 3) {
+    // 判定所有币都在涨,只买多
+    coins.push({
+      symbol: sortAllSymbols[sCount - 1].symbol,
+      canLong: true, // 开启多单
+      canShort: false, // 开启空单
+    })
+  } else {
+    // 在最低的开启空单，最高的开启多单
+    coins.push({
+      symbol: sortAllSymbols[0].symbol,
+      canLong: false, // 开启多单
+      canShort: true, // 开启空单
+    })
+    coins.push({
+      symbol: sortAllSymbols[sCount - 1].symbol,
+      canLong: true, // 开启多单
+      canShort: false, // 开启空单
+    })
+  }
+
+  const positionFilter = positions.filter(
+    item => item.symbol === sortAllSymbols[1].symbol || item.symbol === sortAllSymbols[sCount - 2].symbol
+  ) // 查询第二幅度的持有仓位
+  if (positionFilter) {
+    // 自动平仓
+    await Promise.all(
+      positionFilter.map(async posi => {
+        if (!excludeSymbols.includes(posi.symbol)) {
+          // 排除白名单
+          const positionAmt = Math.abs(posi.positionAmt) // 空单为负数
+          if (posi.positionSide === 'LONG') {
+            // 存在多头,平多
+            await binance.sellMarket(posi.symbol, positionAmt, {
+              positionSide: posi.positionSide,
+            })
+          } else if (posi.positionSide === 'SHORT') {
+            // 存在空头,平空
+            await binance.buyMarket(posi.symbol, positionAmt, {
+              positionSide: posi.positionSide,
+            })
+          }
+        }
+      })
+    )
+  }
 
   await Promise.all(
     coins.map(async coin => {
       const positionSide = 'LONG'
       const positionSideShort = 'SHORT'
-      const { symbol, usdt, profit, leverage, buyTimeOut, canLong, canShort } = coin
+      const { symbol, canLong, canShort } = coin
 
       if (!canLong && !canShort) {
         return
       }
 
-      const openOrders = await binance.getOpenOrder(symbol) // 当前进行中的订单
-
-      const buyOrder = openOrders.find(item => item.side === 'BUY' && item.positionSide === positionSide) // 查询开多的单
-      const sellOrder = openOrders.find(item => item.side === 'SELL' && item.positionSide === positionSide) // 查询平多的单
+      const buyOrder = allOpenOrders.find(
+        item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSide
+      ) // 查询开多的单
+      const sellOrder = allOpenOrders.find(
+        item => item.symbol === symbol && item.side === 'SELL' && item.positionSide === positionSide
+      ) // 查询平多的单
       const positionLong = positions.find(item => item.symbol === symbol && item.positionSide === positionSide) // 是否有多头当前的持仓
 
-      const buyOrderShort = openOrders.find(item => item.side === 'SELL' && item.positionSide === positionSideShort) // 查询开空的单
-      const sellOrderShort = openOrders.find(item => item.side === 'BUY' && item.positionSide === positionSideShort) // 查询平空的单
+      const buyOrderShort = allOpenOrders.find(
+        item => item.symbol === symbol && item.side === 'SELL' && item.positionSide === positionSideShort
+      ) // 查询开空的单
+      const sellOrderShort = allOpenOrders.find(
+        item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSideShort
+      ) // 查询平空的单
       const positionShort = positions.find(item => item.symbol === symbol && item.positionSide === positionSideShort) // 是否有空头当前的持仓
 
       // console.log(JSON.stringify(positionShort))
