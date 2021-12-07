@@ -24,7 +24,7 @@ async function getPrice(symbol) {
 }
 
 let positionsCache = [] // 当前持有仓位缓存
-let openOrderCache = [] // 上一次挂单信息
+let openOrderCache = null // 上一次挂单信息
 
 /**
  * 获取当前持有仓位
