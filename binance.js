@@ -5,6 +5,32 @@ const config = require('./config')
 const { sleep, log, dateFormat, tries } = require('./utils')
 const { knex, createTableIF } = require('./db')
 
+Object.defineProperty(global, '__stack', {
+  get: function () {
+    var orig = Error.prepareStackTrace
+    Error.prepareStackTrace = function (_, stack) {
+      return stack
+    }
+    var err = new Error()
+    Error.captureStackTrace(err, arguments.callee)
+    var stack = err.stack
+    Error.prepareStackTrace = orig
+    return stack
+  },
+})
+
+Object.defineProperty(global, '__line', {
+  get: function () {
+    return __stack[1].getLineNumber()
+  },
+})
+
+Object.defineProperty(global, '__function', {
+  get: function () {
+    return __stack[1].getFunctionName()
+  },
+})
+
 const binance = new Binance().options({
   APIKEY: config.api_key,
   APISECRET: config.api_secret,
@@ -13,13 +39,8 @@ const binance = new Binance().options({
 let weight = 0
 const flag = true
 
-function getFnName(args) {
-  const re = /function\s*(\w*)/i
-  const matches = re.exec(args.callee.toString())
-  return matches[1]
-}
-
 function resetWeight() {
+  log(`${__function}: ${weight}`, flag)
   weight = 0
 }
 
@@ -35,7 +56,7 @@ function getWeight() {
 async function getAccount() {
   const account = await binance.futuresAccount()
   weight += 5
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   // const { availableBalance } = account // 可用余额
   return account
 }
@@ -47,7 +68,7 @@ async function getAccount() {
 async function getPosition() {
   const result = await binance.futuresPositionRisk()
   weight += 5
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   return result
 }
 
@@ -71,7 +92,7 @@ async function getPrices() {
 async function buyLimit(symbol, quantity, price, otherOptions) {
   const result = await binance.futuresBuy(symbol, quantity, price, otherOptions) // 限定价格买入
   weight += 1
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   return result
 }
 
@@ -85,7 +106,7 @@ async function buyLimit(symbol, quantity, price, otherOptions) {
 async function sellLimit(symbol, quantity, price, otherOptions) {
   const result = await binance.futuresSell(symbol, quantity, price, otherOptions) // 限定价格卖出
   weight += 1
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   return result
 }
 
@@ -99,7 +120,7 @@ async function sellLimit(symbol, quantity, price, otherOptions) {
 async function buyMarket(symbol, quantity, otherOptions) {
   const result = await binance.futuresMarketBuy(symbol, quantity, otherOptions) // 市价买入
   weight += 1
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   return result
 }
 
@@ -113,7 +134,7 @@ async function buyMarket(symbol, quantity, otherOptions) {
 async function sellMarket(symbol, quantity, otherOptions) {
   const result = await binance.futuresMarketSell(symbol, quantity, otherOptions) // 市价卖出
   weight += 1
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   return result
 }
 
@@ -125,7 +146,7 @@ async function sellMarket(symbol, quantity, otherOptions) {
  */
 async function cancelOrder(symbol, orderId) {
   weight += 1
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   if (orderId) {
     const result = await binance.futuresCancel(symbol, { orderId })
     return result
@@ -154,7 +175,7 @@ async function orderStatus(symbol, orderId) {
 async function depth(symbol, limit = 20) {
   weight += 2
   const result = await binance.futuresDepth(symbol, { limit })
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   return result
 }
 
@@ -167,7 +188,7 @@ async function depth(symbol, limit = 20) {
 async function leverage(symbol, number) {
   weight += 1
   const result = await binance.futuresLeverage(symbol, number)
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   return result
 }
 
@@ -180,7 +201,7 @@ async function leverage(symbol, number) {
 async function marginType(symbol, marginType = 'ISOLATED') {
   weight += 1
   const result = await binance.futuresMarginType(symbol, marginType)
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   return result
 }
 
@@ -202,12 +223,12 @@ async function getOrder(symbol, params = {}) {
 async function getOpenOrder(symbol, params = {}) {
   if (symbol) {
     weight += 1
-    log(`${getFnName(arguments)}: ${weight}`, flag)
+    log(`${__function}: ${weight}`, flag)
     const result = await binance.futuresOpenOrders(symbol, params)
     return result
   }
   weight += 40
-  log(`${getFnName(arguments)}: ${weight}`, flag)
+  log(`${__function}: ${weight}`, flag)
   const result = await binance.futuresOpenOrders()
   return result
 }
