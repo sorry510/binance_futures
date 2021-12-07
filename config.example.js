@@ -17,9 +17,13 @@ module.exports = {
   websocket: true, // 更新币种信息
 
   web: {
-    secret: '',
+    secret: '323',
     port: 2222,
     username: 'admin',
-    password: 'lb7rCmHQXWDOV',
+    password: '',
+    command: {
+      start: 'pm2 start all',
+      stop: 'pm2 stop all',
+    },
   },
 }

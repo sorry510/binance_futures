@@ -1,9 +1,14 @@
 {
 	"dependencies": {
 		"axios": "^0.24.0",
+		"cors-express": "^0.2.2",
+		"express": "^4.17.1",
+		"express-jwt": "^6.1.0",
+		"jsonwebtoken": "^8.5.1",
 		"knex": "^0.95.14",
 		"mathjs": "^10.0.0",
 		"node-binance-api": "^0.13.1",
+		"shelljs": "^0.8.4",
 		"sqlite3": "^5.0.2"
 	}
 }
