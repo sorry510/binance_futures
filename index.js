@@ -101,7 +101,7 @@ async function run() {
   const positions = (await binance.getPosition()) || [] // 获取当前持有仓位
   if (!Array.isArray(positions)) {
     notify.notifyServiceError(JSON.stringify(positions))
-    sleep(60 * 1000)
+    await sleep(60 * 1000)
     return
   }
   const currentSymbols = new Set(coins.map(item => item.symbol)) // 当前要交易的币种
@@ -355,6 +355,7 @@ async function run() {
     try {
       await run()
       await sleep(sleep_time * 1000)
+      log(`wait ${sleep_time} second`)
     } catch (e) {
       log(e)
       notify.notifyServiceError(e + 'stop 1 min')
