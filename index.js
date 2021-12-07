@@ -39,9 +39,9 @@ async function run() {
   const posiSymbols = sortAllSymbols.filter(item => item.percentChange > 0) // 涨的币
   const negaSymbols = sortAllSymbols.filter(item => item.percentChange <= 0) // 跌的币
 
-  const posiSymbolsReverse = posiSymbols.reverse()
+  const posiSymbolsReverse = posiSymbols.reverse() // 从高到低排
   const posiSymbol = posiSymbolsReverse.find((item, key) => {
-    if (key < posiSymbols.length - 1) {
+    if (key < posiSymbolsReverse.length - 1) {
       const perCha = item.percentChange - posiSymbolsReverse[key + 1].percentChange // 2个币种之间的涨幅差
       return perCha > cha[0] && perCha < cha[1]
     }
@@ -55,7 +55,7 @@ async function run() {
   }) // 买空币种
 
   let coins = []
-  if (posiSymbols.length < 3) {
+  if (posiSymbols.length <= 4) {
     // 判定所有币都在跌,只买空
     if (negaSymbol) {
       coins.push({
@@ -64,7 +64,7 @@ async function run() {
         canShort: true, // 开启空单
       })
     }
-  } else if (negaSymbols.length < 3) {
+  } else if (negaSymbols.length <= 4) {
     // 判定所有币都在涨,只买多
     if (posiSymbol) {
       coins.push({
@@ -99,6 +99,11 @@ async function run() {
   /************************************************获取账户信息 start******************************************************************* */
   const allOpenOrders = (await binance.getOpenOrder()) || [] // 当前进行中的所有订单
   const positions = (await binance.getPosition()) || [] // 获取当前持有仓位
+  if (!Array.isArray(positions)) {
+    notify.notifyServiceError(JSON.stringify(positions))
+    sleep(60 * 1000)
+    return
+  }
   const currentSymbols = new Set(coins.map(item => item.symbol)) // 当前要交易的币种
   const excludeOrderSymbols = new Set(excludeSymbols || []) // 手动交易的白名单
   /************************************************获取账户信息 end******************************************************************* */
@@ -231,8 +236,8 @@ async function run() {
               return
             }
             const quantity = round((usdt / buyPrice) * leverage, 0) // 购买数量
-            await binance.leverage(symbol, leverage) // 修改合约倍数
-            await binance.marginType(symbol) // 修改为逐仓模式
+            // await binance.leverage(symbol, leverage) // 修改合约倍数
+            // await binance.marginType(symbol) // 修改为逐仓模式
             const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
               positionSide,
             }) // 开仓-开多
@@ -309,8 +314,8 @@ async function run() {
               // 如果空单开除价格高于买多的价格，就不再开空单，直到买多的单平仓
               return
             }
-            await binance.leverage(symbol, leverage) // 修改合约倍数
-            await binance.marginType(symbol) // 修改为逐仓模式
+            // await binance.leverage(symbol, leverage) // 修改合约倍数
+            // await binance.marginType(symbol) // 修改为逐仓模式
             const quantity = round((usdt / sellPrice) * leverage, 0) // 购买数量
             const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
               positionSide: positionSideShort,
@@ -352,8 +357,8 @@ async function run() {
       await sleep(sleep_time * 1000)
     } catch (e) {
       log(e)
-      notify.notifyServiceError(e + 'stop 5 min')
-      await sleep(5 * 1000)
+      notify.notifyServiceError(e + 'stop 1 min')
+      await sleep(1 * 60 * 1000)
     }
   }
 
