@@ -39,9 +39,10 @@ async function run() {
   const posiSymbols = sortAllSymbols.filter(item => item.percentChange > 0) // 涨的币
   const negaSymbols = sortAllSymbols.filter(item => item.percentChange <= 0) // 跌的币
 
-  const posiSymbol = posiSymbols.reverse().find((item, key) => {
+  const posiSymbolsReverse = posiSymbols.reverse()
+  const posiSymbol = posiSymbolsReverse.find((item, key) => {
     if (key < posiSymbols.length - 1) {
-      const perCha = item.percentChange - posiSymbols[key + 1].percentChange // 2个币种之间的涨幅差
+      const perCha = item.percentChange - posiSymbolsReverse[key + 1].percentChange // 2个币种之间的涨幅差
       return perCha > cha[0] && perCha < cha[1]
     }
   }) // 买多币种
