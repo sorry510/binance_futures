@@ -11,6 +11,13 @@ const binance = new Binance().options({
 })
 
 let weight = 0
+const flag = true
+
+function getFnName(args) {
+  const re = /function\s*(\w*)/i
+  const matches = re.exec(args.callee.toString())
+  return matches[1]
+}
 
 function resetWeight() {
   weight = 0
@@ -27,6 +34,8 @@ function getWeight() {
  */
 async function getAccount() {
   const account = await binance.futuresAccount()
+  weight += 5
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   // const { availableBalance } = account // 可用余额
   return account
 }
@@ -38,6 +47,7 @@ async function getAccount() {
 async function getPosition() {
   const result = await binance.futuresPositionRisk()
   weight += 5
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   return result
 }
 
@@ -61,6 +71,7 @@ async function getPrices() {
 async function buyLimit(symbol, quantity, price, otherOptions) {
   const result = await binance.futuresBuy(symbol, quantity, price, otherOptions) // 限定价格买入
   weight += 1
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   return result
 }
 
@@ -74,6 +85,7 @@ async function buyLimit(symbol, quantity, price, otherOptions) {
 async function sellLimit(symbol, quantity, price, otherOptions) {
   const result = await binance.futuresSell(symbol, quantity, price, otherOptions) // 限定价格卖出
   weight += 1
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   return result
 }
 
@@ -87,6 +99,7 @@ async function sellLimit(symbol, quantity, price, otherOptions) {
 async function buyMarket(symbol, quantity, otherOptions) {
   const result = await binance.futuresMarketBuy(symbol, quantity, otherOptions) // 市价买入
   weight += 1
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   return result
 }
 
@@ -100,6 +113,7 @@ async function buyMarket(symbol, quantity, otherOptions) {
 async function sellMarket(symbol, quantity, otherOptions) {
   const result = await binance.futuresMarketSell(symbol, quantity, otherOptions) // 市价卖出
   weight += 1
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   return result
 }
 
@@ -111,6 +125,7 @@ async function sellMarket(symbol, quantity, otherOptions) {
  */
 async function cancelOrder(symbol, orderId) {
   weight += 1
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   if (orderId) {
     const result = await binance.futuresCancel(symbol, { orderId })
     return result
@@ -139,6 +154,7 @@ async function orderStatus(symbol, orderId) {
 async function depth(symbol, limit = 20) {
   weight += 2
   const result = await binance.futuresDepth(symbol, { limit })
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   return result
 }
 
@@ -151,6 +167,7 @@ async function depth(symbol, limit = 20) {
 async function leverage(symbol, number) {
   weight += 1
   const result = await binance.futuresLeverage(symbol, number)
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   return result
 }
 
@@ -163,6 +180,7 @@ async function leverage(symbol, number) {
 async function marginType(symbol, marginType = 'ISOLATED') {
   weight += 1
   const result = await binance.futuresMarginType(symbol, marginType)
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   return result
 }
 
@@ -184,10 +202,12 @@ async function getOrder(symbol, params = {}) {
 async function getOpenOrder(symbol, params = {}) {
   if (symbol) {
     weight += 1
+    log(`${getFnName(arguments)}: ${weight}`, flag)
     const result = await binance.futuresOpenOrders(symbol, params)
     return result
   }
   weight += 40
+  log(`${getFnName(arguments)}: ${weight}`, flag)
   const result = await binance.futuresOpenOrders()
   return result
 }
@@ -214,15 +234,15 @@ async function getTrades(symbol, params = {}) {
   return result
 }
 
-let flag = false
+let lock = false
 
 if (config.websocket) {
   /**
    * 更新数据库的币种数据信息 websocket 推送
    */
   binance.futuresTickerStream(false, async prevDay => {
-    if (!flag) {
-      flag = true
+    if (!lock) {
+      lock = true
       for (let obj of prevDay) {
         await tries(async () => {
           await knex('symbols').where('symbol', obj.symbol).update({
@@ -235,7 +255,7 @@ if (config.websocket) {
         })
         log(`${obj.symbol}:${obj.percentChange}`, false)
       }
-      flag = false
+      lock = false
     }
   })
 }
