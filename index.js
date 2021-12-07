@@ -97,8 +97,8 @@ async function run() {
   /************************************************寻找交易币种 end******************************************************************* */
 
   /************************************************获取账户信息 start******************************************************************* */
-  const allOpenOrders = await binance.getOpenOrder() // 当前进行中的所有订单
-  const positions = await binance.getPosition() // 获取当前持有仓位
+  const allOpenOrders = (await binance.getOpenOrder()) || [] // 当前进行中的所有订单
+  const positions = (await binance.getPosition()) || [] // 获取当前持有仓位
   const currentSymbols = new Set(coins.map(item => item.symbol)) // 当前要交易的币种
   const excludeOrderSymbols = new Set(excludeSymbols || []) // 手动交易的白名单
   /************************************************获取账户信息 end******************************************************************* */
@@ -352,7 +352,8 @@ async function run() {
       await sleep(sleep_time * 1000)
     } catch (e) {
       log(e)
-      notify.notifyServiceError(e)
+      notify.notifyServiceError(e + 'stop 5 min')
+      await sleep(5 * 1000)
     }
   }
 
