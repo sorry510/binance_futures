@@ -104,12 +104,18 @@ async function run() {
     await sleep(60 * 1000)
     return
   }
+  const allOpenOrders = await binance.getOpenOrder() // 当前币种的订单
+  if (!Array.isArray(allOpenOrders)) {
+    notify.notifyServiceError(JSON.stringify(allOpenOrders))
+    await sleep(60 * 1000)
+    return
+  }
   const currentSymbols = new Set(coins.map(item => item.symbol)) // 当前要交易的币种
   const excludeOrderSymbols = new Set(excludeSymbols || []) // 手动交易的白名单
   /************************************************获取账户信息 end******************************************************************* */
 
   /*************************************************撤销挂单 start************************************************************ */
-  const openOrderFilter = positions.filter(
+  const openOrderFilter = allOpenOrders.filter(
     item =>
       !currentSymbols.has(item.symbol) && // 非当前要挂单的币种
       !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
@@ -163,13 +169,7 @@ async function run() {
         return
       }
 
-      const allOpenOrders = await binance.getOpenOrder(symbol) // 当前币种的订单
-      if (!Array.isArray(allOpenOrders)) {
-        notify.notifyServiceError(JSON.stringify(allOpenOrders))
-        await sleep(60 * 1000)
-        return
-      }
-
+      // const allOpenOrders = await binance.getOpenOrder(symbol) // 当前币种的订单
       const buyOrder = allOpenOrders.find(
         item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSide
       ) // 查询开多的单
