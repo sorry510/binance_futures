@@ -358,8 +358,8 @@ async function run() {
 }
 
 ;(async () => {
-  binance.resetWeight()
   while (true) {
+    binance.resetWeight()
     try {
       log('weight = ' + binance.getWeight())
       await run()

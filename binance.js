@@ -37,7 +37,7 @@ const binance = new Binance().options({
 })
 
 let weight = 0
-const flag = true
+const flag = false
 
 function resetWeight() {
   log(`${__function}: ${weight}`, flag)
