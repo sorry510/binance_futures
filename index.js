@@ -27,7 +27,7 @@ async function run() {
   // await createTableIF() // 创建数据库
 
   /************************************************寻找交易币种 start******************************************************************* */
-  const allSymbols = await tries(async () => await knex('symbols')) // 查询所有的币种
+  const allSymbols = await tries(async () => await knex('symbols').where('enable', '1')) // 查询所有开启的币种
   if (!Array.isArray(allSymbols)) {
     notify.notifyServiceError(JSON.stringify(allSymbols))
     exit()

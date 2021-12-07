@@ -138,11 +138,12 @@ app.get('/config', (req, res) => {
   )
 })
 
-// 修改配置(自动重启)
+// 修改配置
 app.put('/config', (req, res) => {
-  const { body } = req
-  console.log(body)
-  // fs.writeFileSync(path.resolve(currentDir, '../config.js'), body)
+  const {
+    body: { code },
+  } = req
+  fs.writeFileSync(path.resolve(currentDir, '../config.js'), code)
   res.json(resJson(200))
 })
 
