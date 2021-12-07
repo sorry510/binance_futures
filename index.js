@@ -23,22 +23,6 @@ async function getPrice(symbol) {
   }
 }
 
-let positionsCache = [] // 当前持有仓位缓存
-let openOrderCache = null // 上一次挂单信息
-
-/**
- * 获取当前持有仓位
- * @returns []
- */
-async function getPositions(order) {
-  if (JSON.stringify(order) !== JSON.stringify(openOrderCache)) {
-    const data = await binance.getPosition()
-    positionsCache = data
-  }
-  openOrderCache = order
-  return positionsCache
-}
-
 async function run() {
   // await createTableIF() // 创建数据库
 
@@ -113,8 +97,8 @@ async function run() {
   /************************************************寻找交易币种 end******************************************************************* */
 
   /************************************************获取账户信息 start******************************************************************* */
-  const allOpenOrders = (await binance.getOpenOrder()) || [] // 当前进行中的所有订单
-  const positions = await getPositions(allOpenOrders) // 获取当前持有仓位
+
+  const positions = await binance.getPosition() // 获取当前持有仓位
   if (!Array.isArray(positions)) {
     notify.notifyServiceError(JSON.stringify(positions))
     await sleep(60 * 1000)
@@ -180,6 +164,8 @@ async function run() {
       if (!canLong && !canShort) {
         return
       }
+
+      const allOpenOrders = await binance.getOpenOrder(symbol) // 当前币种的订单
 
       const buyOrder = allOpenOrders.find(
         item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSide
