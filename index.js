@@ -2,7 +2,7 @@ const { exit } = require('process')
 const { round } = require('mathjs')
 const { sleep, log, roundOrderPrice, tries } = require('./utils')
 const { knex } = require('./db')
-const { usdt, profit, leverage, buyTimeOut, sleep_time, excludeSymbols } = require('./config')
+const { usdt, profit, leverage, buyTimeOut, sleep_time, excludeSymbols, cha } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
 
@@ -26,73 +26,127 @@ async function getPrice(symbol) {
 async function run() {
   // await createTableIF() // 创建数据库
 
+  /************************************************寻找交易币种 start******************************************************************* */
   const allSymbols = await tries(async () => await knex('symbols')) // 查询所有的币种
+  if (!Array.isArray(allSymbols)) {
+    notify.notifyServiceError(JSON.stringify(allSymbols))
+    exit()
+  }
   const sortAllSymbols = allSymbols
     .map(item => ({ ...item, percentChange: Number(item.percentChange) }))
     .sort((a, b) => (a.percentChange < b.percentChange ? -1 : 1)) // 涨幅从小到大排序
-  const sCount = sortAllSymbols.length
 
   const posiSymbols = sortAllSymbols.filter(item => item.percentChange > 0) // 涨的币
   const negaSymbols = sortAllSymbols.filter(item => item.percentChange <= 0) // 跌的币
 
-  const allOpenOrders = await binance.getOpenOrder() // 当前进行中的所有订单
-  const positions = await binance.getPosition() // 获取当前持有仓位
+  const posiSymbol = posiSymbols.reverse().find((item, key) => {
+    if (key < posiSymbols.length - 1) {
+      const perCha = item.percentChange - posiSymbols[key + 1].percentChange // 2个币种之间的涨幅差
+      return perCha > cha[0] && perCha < cha[1]
+    }
+  }) // 买多币种
+
+  const negaSymbol = negaSymbols.find((item, key) => {
+    if (key < negaSymbols.length - 1) {
+      const perCha = negaSymbols[key + 1].percentChange - item.percentChange // 2个币种之间的涨幅差
+      return perCha > cha[0] && perCha < cha[1]
+    }
+  }) // 买空币种
 
   let coins = []
   if (posiSymbols.length < 3) {
     // 判定所有币都在跌,只买空
-    coins.push({
-      symbol: sortAllSymbols[0].symbol,
-      canLong: false, // 开启多单
-      canShort: true, // 开启空单
-    })
+    if (negaSymbol) {
+      coins.push({
+        symbol: negaSymbol.symbol,
+        canLong: false, // 开启多单
+        canShort: true, // 开启空单
+      })
+    }
   } else if (negaSymbols.length < 3) {
     // 判定所有币都在涨,只买多
-    coins.push({
-      symbol: sortAllSymbols[sCount - 1].symbol,
-      canLong: true, // 开启多单
-      canShort: false, // 开启空单
-    })
+    if (posiSymbol) {
+      coins.push({
+        symbol: posiSymbol.symbol,
+        canLong: true, // 开启多单
+        canShort: false, // 开启空单
+      })
+    }
   } else {
     // 在最低的开启空单，最高的开启多单
-    coins.push({
-      symbol: sortAllSymbols[0].symbol,
-      canLong: false, // 开启多单
-      canShort: true, // 开启空单
-    })
-    coins.push({
-      symbol: sortAllSymbols[sCount - 1].symbol,
-      canLong: true, // 开启多单
-      canShort: false, // 开启空单
-    })
+    if (negaSymbol) {
+      coins.push({
+        symbol: negaSymbol.symbol,
+        canLong: false, // 开启多单
+        canShort: true, // 开启空单
+      })
+    }
+    if (posiSymbol) {
+      coins.push({
+        symbol: posiSymbol.symbol,
+        canLong: true, // 开启多单
+        canShort: false, // 开启空单
+      })
+    }
   }
+  if (coins.length === 0) {
+    log('没有发现适合交易的币种，请等待')
+    return
+  }
+  /************************************************寻找交易币种 end******************************************************************* */
 
+  /************************************************获取账户信息 start******************************************************************* */
+  const allOpenOrders = await binance.getOpenOrder() // 当前进行中的所有订单
+  const positions = await binance.getPosition() // 获取当前持有仓位
+  const currentSymbols = new Set(coins.map(item => item.symbol)) // 当前要交易的币种
+  const excludeOrderSymbols = new Set(excludeSymbols || []) // 手动交易的白名单
+  /************************************************获取账户信息 end******************************************************************* */
+
+  /*************************************************撤销挂单 start************************************************************ */
+  const openOrderFilter = positions.filter(
+    item =>
+      !currentSymbols.has(item.symbol) && // 非当前要挂单的币种
+      !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
+  )
+  if (openOrderFilter) {
+    // 撤销挂单
+    await Promise.all(
+      openOrderFilter.map(async order => {
+        await binance.cancelOrder(order.symbol, order.orderId) // 撤销挂单
+      })
+    )
+  }
+  /*************************************************撤销挂单 end************************************************************ */
+
+  /*************************************************强制平仓 start************************************************************ */
   const positionFilter = positions.filter(
-    item => item.symbol === sortAllSymbols[1].symbol || item.symbol === sortAllSymbols[sCount - 2].symbol
-  ) // 查询第二幅度的持有仓位
+    item =>
+      Number(item.positionAmt) != 0 && // 有持仓的
+      !currentSymbols.has(item.symbol) && // 非当前要挂单的币种
+      !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
+  )
   if (positionFilter) {
-    // 自动平仓
+    // 强制平仓
     await Promise.all(
       positionFilter.map(async posi => {
-        if (!excludeSymbols.includes(posi.symbol)) {
-          // 排除白名单
-          const positionAmt = Math.abs(posi.positionAmt) // 空单为负数
-          if (posi.positionSide === 'LONG') {
-            // 存在多头,平多
-            await binance.sellMarket(posi.symbol, positionAmt, {
-              positionSide: posi.positionSide,
-            })
-          } else if (posi.positionSide === 'SHORT') {
-            // 存在空头,平空
-            await binance.buyMarket(posi.symbol, positionAmt, {
-              positionSide: posi.positionSide,
-            })
-          }
+        const positionAmt = Math.abs(posi.positionAmt) // 空单为负数
+        if (posi.positionSide === 'LONG') {
+          // 存在多头,平多
+          await binance.sellMarket(posi.symbol, positionAmt, {
+            positionSide: posi.positionSide,
+          })
+        } else if (posi.positionSide === 'SHORT') {
+          // 存在空头,平空
+          await binance.buyMarket(posi.symbol, positionAmt, {
+            positionSide: posi.positionSide,
+          })
         }
       })
     )
   }
+  /*************************************************强制平仓 end************************************************************ */
 
+  /*************************************************开始交易挂单与平仓 start************************************************************ */
   await Promise.all(
     coins.map(async coin => {
       const positionSide = 'LONG'
@@ -287,6 +341,7 @@ async function run() {
       }
     })
   )
+  /*************************************************开始交易挂单与平仓 end************************************************************ */
 }
 
 ;(async () => {
