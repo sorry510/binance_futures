@@ -193,22 +193,28 @@ async function getTrades(symbol, params = {}) {
   return result
 }
 
+let flag = false
+
 if (config.websocket) {
   /**
    * 更新数据库的币种数据信息 websocket 推送
    */
   binance.futuresTickerStream(false, async prevDay => {
-    for (let obj of prevDay) {
-      await tries(async () => {
-        await knex('symbols').where('symbol', obj.symbol).update({
-          percentChange: obj.percentChange,
-          close: obj.close,
-          open: obj.open,
-          low: obj.low,
-          updateTime: obj.eventTime,
+    if (!flag) {
+      flag = true
+      for (let obj of prevDay) {
+        await tries(async () => {
+          await knex('symbols').where('symbol', obj.symbol).update({
+            percentChange: obj.percentChange,
+            close: obj.close,
+            open: obj.open,
+            low: obj.low,
+            updateTime: obj.eventTime,
+          })
         })
-      })
-      log(`${obj.symbol}:${obj.percentChange}`)
+        log(`${obj.symbol}:${obj.percentChange}`)
+      }
+      flag = false
     }
   })
 }
