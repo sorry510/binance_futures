@@ -166,6 +166,11 @@ async function run() {
       }
 
       const allOpenOrders = await binance.getOpenOrder(symbol) // 当前币种的订单
+      if (!Array.isArray(allOpenOrders)) {
+        notify.notifyServiceError(JSON.stringify(allOpenOrders))
+        await sleep(60 * 1000)
+        return
+      }
 
       const buyOrder = allOpenOrders.find(
         item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSide
