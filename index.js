@@ -114,7 +114,7 @@ async function run() {
       !currentSymbols.has(item.symbol) && // 非当前要挂单的币种
       !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
   )
-  if (openOrderFilter) {
+  if (openOrderFilter.length > 0) {
     // 撤销挂单
     await Promise.all(
       openOrderFilter.map(async order => {
@@ -132,7 +132,7 @@ async function run() {
       !currentSymbols.has(item.symbol) && // 非当前要挂单的币种
       !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
   )
-  if (positionFilter) {
+  if (positionFilter.length > 0) {
     // 强制平仓
     await Promise.all(
       positionFilter.map(async posi => {
@@ -360,8 +360,10 @@ async function run() {
 }
 
 ;(async () => {
+  binance.resetWeight()
   while (true) {
     try {
+      log('weight = ' + binance.getWeight())
       await run()
       await sleep(sleep_time * 1000)
       log(`wait ${sleep_time} second`)

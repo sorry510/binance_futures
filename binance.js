@@ -10,6 +10,16 @@ const binance = new Binance().options({
   APISECRET: config.api_secret,
 })
 
+let weight = 0
+
+function resetWeight() {
+  weight = 0
+}
+
+function getWeight() {
+  return weight
+}
+
 /**
  * 当前账户信息
  * @document ./doc/futuresAccount.js
@@ -27,6 +37,7 @@ async function getAccount() {
  */
 async function getPosition() {
   const result = await binance.futuresPositionRisk()
+  weight += 5
   return result
 }
 
@@ -49,6 +60,7 @@ async function getPrices() {
  */
 async function buyLimit(symbol, quantity, price, otherOptions) {
   const result = await binance.futuresBuy(symbol, quantity, price, otherOptions) // 限定价格买入
+  weight += 1
   return result
 }
 
@@ -61,6 +73,7 @@ async function buyLimit(symbol, quantity, price, otherOptions) {
  */
 async function sellLimit(symbol, quantity, price, otherOptions) {
   const result = await binance.futuresSell(symbol, quantity, price, otherOptions) // 限定价格卖出
+  weight += 1
   return result
 }
 
@@ -73,6 +86,7 @@ async function sellLimit(symbol, quantity, price, otherOptions) {
  */
 async function buyMarket(symbol, quantity, otherOptions) {
   const result = await binance.futuresMarketBuy(symbol, quantity, otherOptions) // 市价买入
+  weight += 1
   return result
 }
 
@@ -85,6 +99,7 @@ async function buyMarket(symbol, quantity, otherOptions) {
  */
 async function sellMarket(symbol, quantity, otherOptions) {
   const result = await binance.futuresMarketSell(symbol, quantity, otherOptions) // 市价卖出
+  weight += 1
   return result
 }
 
@@ -95,6 +110,7 @@ async function sellMarket(symbol, quantity, otherOptions) {
  * @param {} otherOptions https://binance-docs.github.io/apidocs/futures/cn/#trade-6
  */
 async function cancelOrder(symbol, orderId) {
+  weight += 1
   if (orderId) {
     const result = await binance.futuresCancel(symbol, { orderId })
     return result
@@ -121,6 +137,7 @@ async function orderStatus(symbol, orderId) {
  * @param {} otherOptions https://binance-docs.github.io/apidocs/futures/cn/#trade-6
  */
 async function depth(symbol, limit = 20) {
+  weight += 2
   const result = await binance.futuresDepth(symbol, { limit })
   return result
 }
@@ -132,6 +149,7 @@ async function depth(symbol, limit = 20) {
  * @doc https://binance-docs.github.io/apidocs/futures/cn/#trade-10
  */
 async function leverage(symbol, number) {
+  weight += 1
   const result = await binance.futuresLeverage(symbol, number)
   return result
 }
@@ -143,6 +161,7 @@ async function leverage(symbol, number) {
  * @doc https://binance-docs.github.io/apidocs/futures/cn/#trade-10
  */
 async function marginType(symbol, marginType = 'ISOLATED') {
+  weight += 1
   const result = await binance.futuresMarginType(symbol, marginType)
   return result
 }
@@ -164,9 +183,11 @@ async function getOrder(symbol, params = {}) {
  */
 async function getOpenOrder(symbol, params = {}) {
   if (symbol) {
+    weight += 1
     const result = await binance.futuresOpenOrders(symbol, params)
     return result
   }
+  weight += 40
   const result = await binance.futuresOpenOrders()
   return result
 }
@@ -220,20 +241,22 @@ if (config.websocket) {
 }
 
 module.exports = {
+  resetWeight,
+  getWeight,
   getAccount,
   getPosition,
-  getPrices,
+  // getPrices,
   buyLimit,
   sellLimit,
   buyMarket,
   sellMarket,
   cancelOrder,
-  orderStatus,
+  // orderStatus,
   depth,
   leverage,
   marginType,
-  getOrder,
+  // getOrder,
   getOpenOrder,
-  getExchangeInfo,
-  getTrades,
+  // getExchangeInfo,
+  // getTrades,
 }
