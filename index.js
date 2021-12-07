@@ -23,6 +23,22 @@ async function getPrice(symbol) {
   }
 }
 
+const positionsCache = [] // 当前持有仓位缓存
+let positionsUpdate = true // 缓存开关
+
+/**
+ * 获取当前持有仓位
+ * @returns []
+ */
+async function getPositions() {
+  if (positionsUpdate) {
+    const data = await binance.getPosition()
+    positionsCache = data
+    positionsUpdate = false
+  }
+  return positionsCache
+}
+
 async function run() {
   // await createTableIF() // 创建数据库
 
@@ -98,7 +114,7 @@ async function run() {
 
   /************************************************获取账户信息 start******************************************************************* */
   const allOpenOrders = (await binance.getOpenOrder()) || [] // 当前进行中的所有订单
-  const positions = (await binance.getPosition()) || [] // 获取当前持有仓位
+  const positions = await getPositions() // 获取当前持有仓位
   if (!Array.isArray(positions)) {
     notify.notifyServiceError(JSON.stringify(positions))
     await sleep(60 * 1000)
@@ -121,6 +137,7 @@ async function run() {
         await binance.cancelOrder(order.symbol, order.orderId) // 撤销挂单
       })
     )
+    positionsUpdate = true
   }
   /*************************************************撤销挂单 end************************************************************ */
 
@@ -149,6 +166,7 @@ async function run() {
         }
       })
     )
+    positionsUpdate = true
   }
   /*************************************************强制平仓 end************************************************************ */
 
@@ -198,6 +216,7 @@ async function run() {
               const result = await binance.sellMarket(symbol, positionLong.positionAmt, {
                 positionSide,
               })
+              positionsUpdate = true
               if (result.code) {
                 // 报错了
                 notify.notifySellOrderFail(symbol, result.msg)
@@ -208,7 +227,7 @@ async function run() {
                   positionLong.positionAmt,
                   roundOrderPrice(positionLong.entryPrice * (1 + nowProfit / 100))
                 )
-                await sleep(3 * 1000)
+                await sleep(1 * 1000)
               }
               log(result)
             } else {
@@ -216,12 +235,13 @@ async function run() {
               const result = await binance.sellLimit(symbol, positionLong.positionAmt, sellPrice, {
                 positionSide,
               }) // 平仓-平多
+              positionsUpdate = true
               if (result.code) {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
                 notify.notifySellOrderSuccess(symbol, positionLong.positionAmt, sellPrice)
-                await sleep(3 * 1000)
+                await sleep(1 * 1000)
               }
               log(result)
             }
@@ -236,17 +256,18 @@ async function run() {
               return
             }
             const quantity = round((usdt / buyPrice) * leverage, 0) // 购买数量
-            // await binance.leverage(symbol, leverage) // 修改合约倍数
-            // await binance.marginType(symbol) // 修改为逐仓模式
+            await binance.leverage(symbol, leverage) // 修改合约倍数
+            await binance.marginType(symbol) // 修改为逐仓模式
             const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
               positionSide,
             }) // 开仓-开多
+            positionsUpdate = true
             if (result.code) {
               notify.notifyBuyOrderFail(symbol, result.msg)
               await sleep(60 * 1000)
             } else {
               notify.notifyBuyOrderSuccess(symbol, quantity, buyPrice)
-              await sleep(3 * 1000)
+              await sleep(1 * 1000)
             }
             log(result)
           } else {
@@ -254,12 +275,13 @@ async function run() {
             const nowTime = +new Date()
             if (nowTime > Number(buyOrder.updateTime) + buyTimeOut * 1000) {
               const result = await binance.cancelOrder(symbol, buyOrder.orderId) // 撤销订单
+              positionsUpdate = true
               if (result.code) {
                 notify.notifyCancelOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
                 notify.notifyCancelOrderSuccess(symbol)
-                await sleep(3 * 1000)
+                await sleep(1 * 1000)
               }
               log(result)
             }
@@ -281,13 +303,14 @@ async function run() {
               const result = await binance.buyMarket(symbol, positionAmt, {
                 positionSide: positionSideShort,
               })
+              positionsUpdate = true
               if (result.code) {
                 // 报错了
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
                 notify.notifySellOrderSuccess(symbol, positionAmt, sellPrice)
-                await sleep(3 * 1000)
+                await sleep(1 * 1000)
               }
               log(result)
             } else {
@@ -295,12 +318,13 @@ async function run() {
               const result = await binance.buyLimit(symbol, positionAmt, sellPrice, {
                 positionSide: positionSideShort,
               }) // 平仓-平空
+              positionsUpdate = true
               if (result.code) {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
                 notify.notifySellOrderSuccess(symbol, positionAmt, sellPrice)
-                await sleep(3 * 1000)
+                await sleep(1 * 1000)
               }
               log(result)
             }
@@ -314,18 +338,19 @@ async function run() {
               // 如果空单开除价格高于买多的价格，就不再开空单，直到买多的单平仓
               return
             }
-            // await binance.leverage(symbol, leverage) // 修改合约倍数
-            // await binance.marginType(symbol) // 修改为逐仓模式
+            await binance.leverage(symbol, leverage) // 修改合约倍数
+            await binance.marginType(symbol) // 修改为逐仓模式
             const quantity = round((usdt / sellPrice) * leverage, 0) // 购买数量
             const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
               positionSide: positionSideShort,
             }) // 开仓-开空
+            positionsUpdate = true
             if (result2.code) {
               notify.notifyBuyOrderFail(symbol, result2.msg)
               await sleep(60 * 1000)
             } else {
               notify.notifyBuyOrderSuccess(symbol, quantity, sellPrice, '做空')
-              await sleep(3 * 1000)
+              await sleep(1 * 1000)
             }
             log(result2)
           } else {
@@ -333,12 +358,13 @@ async function run() {
             const nowTime = +new Date()
             if (nowTime > Number(buyOrderShort.updateTime) + buyTimeOut * 1000) {
               const result = await binance.cancelOrder(symbol, buyOrderShort.orderId) // 撤销订单
+              positionsUpdate = true
               if (result.code) {
                 notify.notifyCancelOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
                 notify.notifyCancelOrderSuccess(symbol)
-                await sleep(3 * 1000)
+                await sleep(1 * 1000)
               }
               log(result)
             }
