@@ -1,6 +1,7 @@
 const { exit } = require('process')
 const { round } = require('mathjs')
-const { sleep, log, roundOrderPrice } = require('./utils')
+const { sleep, log, roundOrderPrice, tries } = require('./utils')
+const { knex } = require('./db')
 const { usdt, profit, leverage, buyTimeOut, sleep_time, excludeSymbols } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
@@ -294,6 +295,7 @@ async function run() {
       await run()
       await sleep(sleep_time * 1000)
     } catch (e) {
+      log(e)
       notify.notifyServiceError(e)
     }
   }
