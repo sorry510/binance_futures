@@ -137,6 +137,7 @@ async function run() {
         await binance.cancelOrder(order.symbol, order.orderId) // 撤销挂单
       })
     )
+    positionsUpdate = true
   }
   /*************************************************撤销挂单 end************************************************************ */
 
@@ -165,6 +166,7 @@ async function run() {
         }
       })
     )
+    positionsUpdate = true
   }
   /*************************************************强制平仓 end************************************************************ */
 
@@ -214,7 +216,6 @@ async function run() {
               const result = await binance.sellMarket(symbol, positionLong.positionAmt, {
                 positionSide,
               })
-
               if (result.code) {
                 // 报错了
                 notify.notifySellOrderFail(symbol, result.msg)
@@ -233,7 +234,6 @@ async function run() {
               const result = await binance.sellLimit(symbol, positionLong.positionAmt, sellPrice, {
                 positionSide,
               }) // 平仓-平多
-
               if (result.code) {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
@@ -259,7 +259,6 @@ async function run() {
             const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
               positionSide,
             }) // 开仓-开多
-
             if (result.code) {
               notify.notifyBuyOrderFail(symbol, result.msg)
               await sleep(60 * 1000)
@@ -273,7 +272,6 @@ async function run() {
             const nowTime = +new Date()
             if (nowTime > Number(buyOrder.updateTime) + buyTimeOut * 1000) {
               const result = await binance.cancelOrder(symbol, buyOrder.orderId) // 撤销订单
-
               if (result.code) {
                 notify.notifyCancelOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
@@ -301,7 +299,6 @@ async function run() {
               const result = await binance.buyMarket(symbol, positionAmt, {
                 positionSide: positionSideShort,
               })
-
               if (result.code) {
                 // 报错了
                 notify.notifySellOrderFail(symbol, result.msg)
@@ -316,7 +313,6 @@ async function run() {
               const result = await binance.buyLimit(symbol, positionAmt, sellPrice, {
                 positionSide: positionSideShort,
               }) // 平仓-平空
-
               if (result.code) {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
@@ -342,7 +338,6 @@ async function run() {
             const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
               positionSide: positionSideShort,
             }) // 开仓-开空
-
             if (result2.code) {
               notify.notifyBuyOrderFail(symbol, result2.msg)
               await sleep(60 * 1000)
@@ -356,7 +351,6 @@ async function run() {
             const nowTime = +new Date()
             if (nowTime > Number(buyOrderShort.updateTime) + buyTimeOut * 1000) {
               const result = await binance.cancelOrder(symbol, buyOrderShort.orderId) // 撤销订单
-
               if (result.code) {
                 notify.notifyCancelOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
