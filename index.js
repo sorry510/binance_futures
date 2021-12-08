@@ -193,7 +193,7 @@ async function run() {
         if (positionLong.positionAmt > 0) {
           // 有持仓
           const { unRealizedProfit, notional } = positionLong
-          const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
+          const nowProfit = (unRealizedProfit / (notional - unRealizedProfit)) * leverage * 100
           const sellPrice = roundOrderPrice(positionLong.entryPrice * (1 + profit / 100 / leverage))
           if (!buyOrder && !sellOrder) {
             // 不是部分买入持仓且没有挂卖单
@@ -296,7 +296,7 @@ async function run() {
           // 有持仓
           const { unRealizedProfit, notional } = positionShort
           const sellPrice = roundOrderPrice(positionShort.entryPrice * (1 - profit / 100 / leverage))
-          const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
+          const nowProfit = (unRealizedProfit / (notional - unRealizedProfit)) * leverage * 100
           if (!buyOrderShort && !sellOrderShort) {
             // 不是部分买入持仓且没有挂卖单
             if (nowProfit > profit) {
