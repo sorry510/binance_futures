@@ -144,11 +144,10 @@ async function run() {
         const positionAmt = Math.abs(posi.positionAmt) // 空单为负数
         const { unRealizedProfit, entryPrice } = posi
         const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
-        if (nowProfit <= -profit || nowProfit >= profit) {
+        if (nowProfit <= -loss || nowProfit >= loss) {
           // 收益在止盈之外的
           if (posi.positionSide === 'LONG') {
             // 存在多头,平多
-
             await binance.sellMarket(posi.symbol, positionAmt, {
               positionSide: posi.positionSide,
             })
