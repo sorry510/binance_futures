@@ -118,12 +118,31 @@ app.put('/features/:id', async (req, res) => {
   res.json(resJson(200))
 })
 
+// 修改合约交易对开启关闭
+app.put('/features/enable/:flag', async (req, res) => {
+  const {
+    params: { flag },
+  } = req
+  const result = await tries(async () => await knex('symbols').update({ enable: flag }))
+  res.json(resJson(200))
+})
+
 // 新增合约交易对信息
 app.post('/features', async (req, res) => {
   const { body } = req
   const result = await tries(async () => await knex('symbols').insert(body))
   console.log(result)
   res.json(resJson(200, body))
+})
+
+// 修改合约交易对信息
+app.delete('/features/:id', async (req, res) => {
+  const {
+    body,
+    params: { id },
+  } = req
+  const result = await tries(async () => await knex('symbols').where('id', id).delete())
+  res.json(resJson(200))
 })
 
 // 读取配置文件
