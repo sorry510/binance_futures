@@ -115,19 +115,19 @@ async function run() {
   /************************************************获取账户信息 end******************************************************************* */
 
   /*************************************************撤销挂单 start************************************************************ */
-  const openOrderFilter = allOpenOrders.filter(
-    item =>
-      !currentSymbols.has(item.symbol) && // 非当前要挂单的币种
-      !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
-  )
-  if (openOrderFilter.length > 0) {
-    // 撤销挂单
-    await Promise.all(
-      openOrderFilter.map(async order => {
-        await binance.cancelOrder(order.symbol, order.orderId) // 撤销挂单
-      })
-    )
-  }
+  // const openOrderFilter = allOpenOrders.filter(
+  //   item =>
+  //     !currentSymbols.has(item.symbol) && // 非当前要挂单的币种
+  //     !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
+  // )
+  // if (openOrderFilter.length > 0) {
+  //   // 撤销挂单
+  //   await Promise.all(
+  //     openOrderFilter.map(async order => {
+  //       await binance.cancelOrder(order.symbol, order.orderId) // 撤销挂单
+  //     })
+  //   )
+  // }
   /*************************************************撤销挂单 end************************************************************ */
 
   /*************************************************强制平仓 start************************************************************ */
@@ -142,16 +142,22 @@ async function run() {
     await Promise.all(
       positionFilter.map(async posi => {
         const positionAmt = Math.abs(posi.positionAmt) // 空单为负数
-        if (posi.positionSide === 'LONG') {
-          // 存在多头,平多
-          await binance.sellMarket(posi.symbol, positionAmt, {
-            positionSide: posi.positionSide,
-          })
-        } else if (posi.positionSide === 'SHORT') {
-          // 存在空头,平空
-          await binance.buyMarket(posi.symbol, positionAmt, {
-            positionSide: posi.positionSide,
-          })
+        const { unRealizedProfit, entryPrice } = posi
+        const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
+        if (nowProfit <= -profit || nowProfit >= profit) {
+          // 收益在止盈之外的
+          if (posi.positionSide === 'LONG') {
+            // 存在多头,平多
+
+            await binance.sellMarket(posi.symbol, positionAmt, {
+              positionSide: posi.positionSide,
+            })
+          } else if (posi.positionSide === 'SHORT') {
+            // 存在空头,平空
+            await binance.buyMarket(posi.symbol, positionAmt, {
+              positionSide: posi.positionSide,
+            })
+          }
         }
       })
     )
