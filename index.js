@@ -208,7 +208,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做多', '止赢')
-                await sleep(1 * 1000)
+                await sleep(10 * 1000)
               }
               log(result)
             } else {
@@ -221,7 +221,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做多', '挂单')
-                await sleep(1 * 1000)
+                await sleep(10 * 1000)
               }
               log(result)
             }
@@ -282,7 +282,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifyCancelOrderSuccess(symbol)
-                await sleep(6 * 1000)
+                await sleep(10 * 1000)
               }
               log(result)
             }
@@ -310,7 +310,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做空', '止盈')
-                await sleep(1 * 1000)
+                await sleep(10 * 1000)
               }
               log(result)
             } else {
@@ -323,7 +323,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做空', '挂单')
-                await sleep(1 * 1000)
+                await sleep(10 * 1000)
               }
               log(result)
             }
@@ -384,7 +384,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifyCancelOrderSuccess(symbol)
-                await sleep(1 * 1000)
+                await sleep(10 * 1000)
               }
               log(result)
             }
