@@ -12,11 +12,11 @@ const { web } = require('../config.js')
 const { resJson } = require('./utils')
 const { tries } = require('../utils')
 const currentDir = path.dirname(__filename)
-const webIndex = '/zmkm'
+const webIndex = web.enterPoint || '/'
 
 const app = express()
 const port = web.port || 2222
-const secret = web.secret || 'admin'
+const secret = web.secret || '12321'
 const user = {
   name: web.username || 'admin',
   password: web.password || 'admin',
@@ -38,7 +38,7 @@ const options = {
 }
 
 // 静态资源
-app.use(express.static(path.join(currentDir, 'dist')))
+app.use(express.static(path.join(currentDir, 'dist'), { index: false }))
 
 // 跨域配置
 app.use(cors(options))
@@ -54,7 +54,8 @@ app.use(
 )
 
 app.use(function (err, req, res, next) {
-  if (req.path.includes('static')) {
+  console.log(req.path)
+  if (req.path.includes('static') && !req.path.includes('index.html')) {
     // 避免静态资源被jwt校验
     next()
   } else if (err.name === 'UnauthorizedError') {
@@ -180,7 +181,7 @@ app.post('/stop', (req, res) => {
 
 // 查看前台页面
 app.get(webIndex, (req, res) => {
-  res.sendFile(path.resolve(currentDir, './dist/zmkm.html'), { maxAge: 0 })
+  res.sendFile(path.resolve(currentDir, './dist/index.html'), { maxAge: 0 })
 })
 
 app.listen(port, () => {

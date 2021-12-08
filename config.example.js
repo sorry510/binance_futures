@@ -22,6 +22,7 @@ module.exports = {
     port: 2222,
     username: 'admin',
     password: '',
+    enterPoint: '/',
     command: {
       start: 'pm2 start all',
       stop: 'pm2 stop all',
