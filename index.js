@@ -192,14 +192,14 @@ async function run() {
       if (positionLong && canLong) {
         if (positionLong.positionAmt > 0) {
           // 有持仓
-          const { unRealizedProfit, notional } = positionLong
-          const nowProfit = (unRealizedProfit / (notional - unRealizedProfit)) * leverage * 100
-          const sellPrice = roundOrderPrice(positionLong.entryPrice * (1 + profit / 100 / leverage))
+          const { unRealizedProfit, entryPrice, positionAmt } = positionLong
+          const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
+          const sellPrice = roundOrderPrice(entryPrice * (1 + profit / 100 / leverage))
           if (!buyOrder && !sellOrder) {
             // 不是部分买入持仓且没有挂卖单
             if (nowProfit > profit) {
               // 当前价格高于止盈率
-              const result = await binance.sellMarket(symbol, positionLong.positionAmt, {
+              const result = await binance.sellMarket(symbol, positionAmt, {
                 positionSide,
               })
               if (result.code) {
@@ -213,7 +213,7 @@ async function run() {
               log(result)
             } else {
               // 挂平仓的单
-              const result = await binance.sellLimit(symbol, positionLong.positionAmt, sellPrice, {
+              const result = await binance.sellLimit(symbol, positionAmt, sellPrice, {
                 positionSide,
               }) // 平仓-平多
               if (result.code) {
@@ -229,7 +229,7 @@ async function run() {
           if (!buyOrder && sellOrder) {
             // 止损
             if (nowProfit < -loss) {
-              const result = await binance.sellMarket(symbol, positionLong.positionAmt, {
+              const result = await binance.sellMarket(symbol, positionAmt, {
                 positionSide,
               })
               if (result.code) {
@@ -240,11 +240,11 @@ async function run() {
                 notify.notifySellOrderSuccess(
                   symbol,
                   unRealizedProfit,
-                  positionLong.entryPrice * (1 + nowProfit / 100 / leverage),
+                  entryPrice * (1 + nowProfit / 100 / leverage),
                   '做多',
                   '止损'
                 )
-                await sleep(5 * 60 * 1000) // 止损后暂停 5 min
+                await sleep(3 * 60 * 1000) // 止损后暂停 3 min
               }
               log(result)
             }
@@ -291,12 +291,12 @@ async function run() {
       }
 
       if (positionShort && canShort) {
-        const positionAmt = Math.abs(positionShort.positionAmt) // 空单为负数
+        const positionAmt = Math.abs(positionShort.positionAmt) // 空单为负数，取绝对值
         if (positionAmt > 0) {
           // 有持仓
-          const { unRealizedProfit, notional } = positionShort
-          const sellPrice = roundOrderPrice(positionShort.entryPrice * (1 - profit / 100 / leverage))
-          const nowProfit = (unRealizedProfit / (notional - unRealizedProfit)) * leverage * 100
+          const { unRealizedProfit, entryPrice } = positionShort
+          const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
+          const sellPrice = roundOrderPrice(entryPrice * (1 - profit / 100 / leverage))
           if (!buyOrderShort && !sellOrderShort) {
             // 不是部分买入持仓且没有挂卖单
             if (nowProfit > profit) {
@@ -341,12 +341,12 @@ async function run() {
               } else {
                 notify.notifySellOrderSuccess(
                   symbol,
-                  positionAmt,
-                  positionShort.entryPrice * (1 - nowProfit / 100 / leverage),
+                  unRealizedProfit,
+                  entryPrice * (1 - nowProfit / 100 / leverage),
                   '做空',
                   '止损'
                 )
-                await sleep(5 * 60 * 1000)
+                await sleep(3 * 60 * 1000)
               }
               log(result)
             }
