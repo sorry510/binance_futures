@@ -1,5 +1,6 @@
-const Binance = require('node-binance-api')
 const process = require('process')
+const fs = require('fs')
+const Binance = require('node-binance-api')
 const { round } = require('mathjs')
 const config = require('./config')
 const { sleep, log, dateFormat, tries } = require('./utils')
@@ -258,6 +259,10 @@ async function getTrades(symbol, params = {}) {
 let lock = false
 
 if (config.websocket) {
+  const dbFile = './data/data.db'
+  if (!fs.existsSync(dbFile)) {
+    fs.copyFileSync(dbFile + '.example', dbFile)
+  }
   /**
    * 更新数据库的币种数据信息 websocket 推送
    */

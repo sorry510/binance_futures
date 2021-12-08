@@ -2,7 +2,7 @@ const { exit } = require('process')
 const { round } = require('mathjs')
 const { sleep, log, roundOrderPrice, tries } = require('./utils')
 const { knex } = require('./db')
-const { usdt, profit, leverage, buyTimeOut, sleep_time, excludeSymbols, cha } = require('./config')
+const { usdt, profit, loss = 100, leverage, buyTimeOut, sleep_time, excludeSymbols, cha } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
 
@@ -192,14 +192,11 @@ async function run() {
       if (positionLong && canLong) {
         if (positionLong.positionAmt > 0) {
           // 有持仓
+          const { unRealizedProfit, notional } = positionLong
+          const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
+          const sellPrice = roundOrderPrice(positionLong.entryPrice * (1 + profit / 100 / leverage))
           if (!buyOrder && !sellOrder) {
             // 不是部分买入持仓且没有挂卖单
-            const { unRealizedProfit, notional } = positionLong
-            // const nowPrice = await binance.getPrices()[symbol]
-            const sellPrice = roundOrderPrice(positionLong.entryPrice * (1 + profit / 100 / leverage))
-            // console.log(nowPrice, sellPrice, positionLong.positionAmt)
-            // process.exit()
-            const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
             if (nowProfit > profit) {
               // 当前价格高于止盈率
               const result = await binance.sellMarket(symbol, positionLong.positionAmt, {
@@ -210,11 +207,7 @@ async function run() {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
-                notify.notifySellOrderSuccess(
-                  symbol,
-                  positionLong.positionAmt,
-                  roundOrderPrice(positionLong.entryPrice * (1 + nowProfit / 100))
-                )
+                notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做多', '止赢')
                 await sleep(1 * 1000)
               }
               log(result)
@@ -227,8 +220,31 @@ async function run() {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
-                notify.notifySellOrderSuccess(symbol, positionLong.positionAmt, sellPrice)
+                notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做多', '挂单')
                 await sleep(1 * 1000)
+              }
+              log(result)
+            }
+          }
+          if (!buyOrder && sellOrder) {
+            // 止损
+            if (nowProfit < -loss) {
+              const result = await binance.sellMarket(symbol, positionLong.positionAmt, {
+                positionSide,
+              })
+              if (result.code) {
+                // 报错了
+                notify.notifySellOrderFail(symbol, result.msg)
+                await sleep(60 * 1000)
+              } else {
+                notify.notifySellOrderSuccess(
+                  symbol,
+                  unRealizedProfit,
+                  positionLong.entryPrice * (1 + nowProfit / 100 / leverage),
+                  '做多',
+                  '止损'
+                )
+                await sleep(5 * 60 * 1000) // 止损后暂停 5 min
               }
               log(result)
             }
@@ -266,7 +282,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifyCancelOrderSuccess(symbol)
-                await sleep(1 * 1000)
+                await sleep(6 * 1000)
               }
               log(result)
             }
@@ -278,11 +294,11 @@ async function run() {
         const positionAmt = Math.abs(positionShort.positionAmt) // 空单为负数
         if (positionAmt > 0) {
           // 有持仓
+          const { unRealizedProfit, notional } = positionShort
+          const sellPrice = roundOrderPrice(positionShort.entryPrice * (1 - profit / 100 / leverage))
+          const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
           if (!buyOrderShort && !sellOrderShort) {
             // 不是部分买入持仓且没有挂卖单
-            const { unRealizedProfit, notional } = positionShort
-            const sellPrice = roundOrderPrice(positionShort.entryPrice * (1 - profit / 100 / leverage))
-            const nowProfit = (unRealizedProfit / (notional - unRealizedProfit) / 100) * leverage
             if (nowProfit > profit) {
               // 当前价格高于止盈率
               const result = await binance.buyMarket(symbol, positionAmt, {
@@ -293,7 +309,7 @@ async function run() {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
-                notify.notifySellOrderSuccess(symbol, positionAmt, sellPrice)
+                notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做空', '止盈')
                 await sleep(1 * 1000)
               }
               log(result)
@@ -306,8 +322,31 @@ async function run() {
                 notify.notifySellOrderFail(symbol, result.msg)
                 await sleep(60 * 1000)
               } else {
-                notify.notifySellOrderSuccess(symbol, positionAmt, sellPrice)
+                notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做空', '挂单')
                 await sleep(1 * 1000)
+              }
+              log(result)
+            }
+          }
+          if (!buyOrderShort && sellOrderShort) {
+            // 止损
+            if (nowProfit < -loss) {
+              const result = await binance.buyMarket(symbol, positionAmt, {
+                positionSide: positionSideShort,
+              })
+              if (result.code) {
+                // 报错了
+                notify.notifySellOrderFail(symbol, result.msg)
+                await sleep(60 * 1000)
+              } else {
+                notify.notifySellOrderSuccess(
+                  symbol,
+                  positionAmt,
+                  positionShort.entryPrice * (1 - nowProfit / 100 / leverage),
+                  '做空',
+                  '止损'
+                )
+                await sleep(5 * 60 * 1000)
               }
               log(result)
             }

@@ -1,3 +1,4 @@
 **/node_modules
 config.js
 data/data.db-journal
+data/data.db

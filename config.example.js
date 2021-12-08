@@ -5,6 +5,7 @@ module.exports = {
 
   usdt: 20, // 交易金额 usdt
   profit: 3, // 止盈率
+  loss: 6, // 止损率
   leverage: 10, // 合约倍数
   buyTimeOut: 120, // 挂单购买的超时时间
   excludeSymbols: ['SANDUSDT', 'MASKUSDT', 'LUNAUSDT', 'AVAXUSDT', 'IOTXUSDT'], // 排除自动平仓的币

@@ -79,13 +79,13 @@ async function notifyBuyOrderFail(symbol, info) {
   await notify(text)
 }
 
-async function notifySellOrderSuccess(symbol, quantity, price, side = '做多') {
+async function notifySellOrderSuccess(symbol, usdt, price, side = '做多', type = '止盈') {
   const text = `## ${symbol}交易通知
   #### **币种**：${symbol}
-  #### **类型**：<font color="#ff0000">卖单</font>
-  #### **挂卖单价格**：<font color="#008000">${round(price, 6)}</font>
-  #### **方向**：<font color="#008000">${side}</font>
-  #### **卖单数量**：<font color="#008000">${round(quantity, 6)}</font>
+  #### **类型**：<font color="#ff0000">${type}</font>
+  #### **预计卖单价格**：<font color="#008000">${round(price, 6)}</font>
+  #### **方向**：<font color="#ff0000">${side}</font>
+  #### **当前收益**：<font color="#008000">${round(usdt, 4)}usdt</font>
   #### **时间**：${dateFormat()}
 
   > author ${author}`
