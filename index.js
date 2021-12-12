@@ -66,6 +66,8 @@ async function run() {
         if (positionLong && positionLong.positionAmt > 0) {
           // 已经买过了
         } else {
+          await binance.marginType(symbol) // 逐仓
+          await binance.leverage(symbol, leverage) // 合约倍数
           const result = await binance.buyMarket(symbol, Number(quantity), {
             positionSide,
           }) // 开仓-开多
