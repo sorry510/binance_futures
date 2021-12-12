@@ -1,7 +1,7 @@
 const process = require('process')
 const fs = require('fs')
 const Binance = require('node-binance-api')
-const { round } = require('mathjs')
+const { round, re } = require('mathjs')
 const config = require('./config')
 const { sleep, log, dateFormat, tries } = require('./utils')
 const { knex, createTableIF } = require('./db')
@@ -81,6 +81,37 @@ async function getPosition() {
 async function getPrices() {
   const result = await binance.futuresPrices()
   return result
+}
+
+/**
+ * 获取 kline
+ * @param string symbol
+ * @param string type 1m 3m 5m 15m 30m 1h 2h 4h 6h 8h 12h 1d 3d
+ * @param {} params {limit: 20}
+ * @doc https://binance-docs.github.io/apidocs/futures/cn/#k
+ */
+async function getKline(symbol, type = '3m', params = {}) {
+  const result = await binance.futuresCandles(symbol, type, params) // 数据从以前到最新的时间
+  weight += 1
+  log(`${__function}: ${weight}`, flag)
+  return result
+}
+
+/**
+ * 比较2个MA
+ * @param string symbol
+ * @param string type
+ * @param number keys
+ */
+async function getMaCompare(symbol, type, keys) {
+  const limit = Math.max(...keys) + 1
+  let result = await binance.futuresCandles(symbol, type, { limit })
+  result = result.map(item => Number(item[4])).reverse() // 获取最新到以前的收盘价
+
+  function avg(arr, key) {
+    return arr.slice(0, key).reduce((carry, item) => carry + item, 0) / key
+  }
+  return keys.map(key => avg(result, key))
 }
 
 /**
@@ -292,6 +323,8 @@ module.exports = {
   getAccount,
   getPosition,
   // getPrices,
+  getKline,
+  getMaCompare,
   buyLimit,
   sellLimit,
   buyMarket,

@@ -54,12 +54,10 @@ async function notifySymbolChange(trade) {
   await notify(text)
 }
 
-async function notifyBuyOrderSuccess(symbol, quantity, price, side = '做多') {
+async function notifyBuyOrderSuccess(symbol, quantity, side = '做多') {
   const text = `## ${symbol}交易通知
   #### **币种**：${symbol}
-  #### **类型**：<font color="#008000">买单</font>
-  #### **挂买单价格**：<font color="#008000">${round(price, 6)}</font>
-  #### **方向**：<font color="#008000">${side}</font>
+  #### **类型**：<font color="#008000">市价${side}</font>
   #### **买单数量**：<font color="#008000">${round(quantity, 6)}</font>
   #### **时间**：${dateFormat()}
 
@@ -79,12 +77,10 @@ async function notifyBuyOrderFail(symbol, info) {
   await notify(text)
 }
 
-async function notifySellOrderSuccess(symbol, usdt, price, side = '做多', type = '止盈') {
+async function notifySellOrderSuccess(symbol, usdt, side = '平多') {
   const text = `## ${symbol}交易通知
   #### **币种**：${symbol}
-  #### **类型**：<font color="#ff0000">${type}</font>
-  #### **预计卖单价格**：<font color="#008000">${round(price, 6)}</font>
-  #### **方向**：<font color="#ff0000">${side}</font>
+  #### **类型**：<font color="#ff0000">市价${side}</font>
   #### **当前收益**：<font color="#008000">${round(usdt, 4)}usdt</font>
   #### **时间**：${dateFormat()}
 

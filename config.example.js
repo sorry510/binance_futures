@@ -17,6 +17,8 @@ module.exports = {
   sleep_time: 1, // 轮训时间
   websocket: true, // 更新币种信息
 
+  symbols: ['SANDUSDT'],
+
   web: {
     secret: '323',
     port: 2222,
