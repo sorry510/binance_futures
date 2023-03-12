@@ -169,7 +169,17 @@ async function run() {
     coins.map(async coin => {
       const positionSide = 'LONG'
       const positionSideShort = 'SHORT'
-      const { symbol, canLong, canShort } = coin
+      let { symbol, canLong, canShort } = coin
+
+      const [ma2, ma20] = await binance.getMaCompare(symbol, '3m', [2, 20]) // 3min的kline 2日线 与 20日线
+
+      if (ma2 >= ma20) {
+        // 涨的趋势, 不可以做空
+        canShort = false
+      } else {
+        // 跌的趋势, 不可以做多
+        canLong = false
+      }
 
       if (!canLong && !canShort) {
         return
