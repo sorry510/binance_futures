@@ -84,6 +84,23 @@ async function getPrices() {
 }
 
 /**
+ * 比较2个MA
+ * @param string symbol
+ * @param string type
+ * @param number keys
+ */
+async function getMaCompare(symbol, type, keys) {
+  const limit = Math.max(...keys) + 1
+  let result = await binance.futuresCandles(symbol, type, { limit })
+  result = result.map(item => Number(item[4])).reverse() // 获取最新到以前的收盘价
+
+  function avg(arr, key) {
+    return arr.slice(0, key).reduce((carry, item) => carry + item, 0) / key
+  }
+  return keys.map(key => avg(result, key))
+}
+
+/**
  * 限价买入
  * @param string symbol
  * @param Number quantity
@@ -292,6 +309,7 @@ module.exports = {
   getAccount,
   getPosition,
   // getPrices,
+  getMaCompare,
   buyLimit,
   sellLimit,
   buyMarket,
