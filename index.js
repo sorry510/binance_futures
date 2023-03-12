@@ -27,12 +27,13 @@ async function run() {
   // await createTableIF() // 创建数据库
 
   /************************************************寻找交易币种 start******************************************************************* */
-  const allSymbols = await tries(async () => await knex('symbols').where('enable', '1')) // 查询所有开启的币种
+  const allSymbols = await tries(async () => await knex('symbols'))
   if (!Array.isArray(allSymbols)) {
     notify.notifyServiceError(JSON.stringify(allSymbols))
     exit()
   }
   const sortAllSymbols = allSymbols
+    .filter(item => item.enable == 1) // 查询所有开启的币种
     .map(item => ({ ...item, percentChange: Number(item.percentChange) }))
     .sort((a, b) => (a.percentChange < b.percentChange ? -1 : 1)) // 涨幅从小到大排序
 
@@ -45,32 +46,32 @@ async function run() {
       const perCha = item.percentChange - posiSymbolsReverse[key + 1].percentChange // 2个币种之间的涨幅差
       return perCha > cha[0] && perCha < cha[1]
     }
-  }) // 买多币种
+  }) // 在差距范围内涨的最多的币
 
   const negaSymbol = negaSymbols.find((item, key) => {
     if (key < negaSymbols.length - 1) {
       const perCha = negaSymbols[key + 1].percentChange - item.percentChange // 2个币种之间的涨幅差
       return perCha > cha[0] && perCha < cha[1]
     }
-  }) // 买空币种
+  }) // 在差距范围内跌的最多的币
 
   let coins = []
-  if (posiSymbols.length <= 4) {
-    // 判定所有币都在跌,只买空
-    if (negaSymbol) {
-      coins.push({
-        symbol: negaSymbol.symbol,
-        canLong: false, // 开启多单
-        canShort: true, // 开启空单
-      })
-    }
-  } else if (negaSymbols.length <= 4) {
-    // 判定所有币都在涨,只买多
+  if (posiSymbols.length / allSymbols.length > 0.66) {
+    // 2/3的币都在涨,只买多
     if (posiSymbol) {
       coins.push({
         symbol: posiSymbol.symbol,
         canLong: true, // 开启多单
         canShort: false, // 开启空单
+      })
+    }
+  } else if (negaSymbols.length / allSymbols.length > 0.66) {
+    // 2/3的币都在跌,只买空
+    if (negaSymbol) {
+      coins.push({
+        symbol: negaSymbol.symbol,
+        canLong: false, // 开启多单
+        canShort: true, // 开启空单
       })
     }
   } else {
@@ -406,10 +407,10 @@ async function run() {
   await sleep(5 * 1000)
   log('database sync success')
   while (true) {
-    binance.resetWeight()
+    // binance.resetWeight()
     try {
       await run()
-      log('weight = ' + binance.getWeight())
+      // log('weight = ' + binance.getWeight())
       await sleep(sleep_time * 1000)
       log(`wait ${sleep_time} second`)
     } catch (e) {
