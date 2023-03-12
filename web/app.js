@@ -97,15 +97,15 @@ app.get('/features', async (req, res) => {
   const {
     query: { sort = '+' },
   } = req
-  const allSymbols = await tries(async () => await knex('symbols'))
+  const allSymbols = await tries(async () => await knex('symbols').orderBy('enable', 'desc').orderBy('percentChange', sort === '-' ? 'desc' : 'asc'))
   const sortAllSymbols = allSymbols
     .map(item => ({ ...item, percentChange: Number(item.percentChange) }))
-    .sort((a, b) => {
-      if (sort === '-') {
-        return a.percentChange < b.percentChange ? -1 : 1
-      }
-      return a.percentChange < b.percentChange ? 1 : -1
-    }) // 涨幅从小到大排序
+    // .sort((a, b) => {
+    //   if (sort === '-') {
+    //     return a.percentChange < b.percentChange ? -1 : 1
+    //   }
+    //   return a.percentChange < b.percentChange ? 1 : -1
+    // }) // 涨幅从小到大排序
   res.json(resJson(200, sortAllSymbols))
 })
 
