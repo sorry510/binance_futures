@@ -18,8 +18,8 @@ async function getPrice(symbol) {
     return num > 0 ? sum / num : 0
   }
   return {
-    buyPrice: roundOrderPrice(avg(result.bids)),
-    sellPrice: roundOrderPrice(avg(result.asks)),
+    buyPrice: roundOrderPrice(avg(result.bids), symbol),
+    sellPrice: roundOrderPrice(avg(result.asks), symbol),
   }
 }
 
@@ -210,7 +210,7 @@ async function run() {
           // 有持仓
           const { unRealizedProfit, entryPrice, positionAmt } = positionLong
           const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
-          const sellPrice = roundOrderPrice(entryPrice * (1 + profit / 100 / leverage))
+          const sellPrice = roundOrderPrice(entryPrice * (1 + profit / 100 / leverage), symbol)
           if (!buyOrder && !sellOrder) {
             // 不是部分买入持仓且没有挂卖单
             if (nowProfit > profit) {
@@ -312,7 +312,7 @@ async function run() {
           // 有持仓
           const { unRealizedProfit, entryPrice } = positionShort
           const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
-          const sellPrice = roundOrderPrice(entryPrice * (1 - profit / 100 / leverage))
+          const sellPrice = roundOrderPrice(entryPrice * (1 - profit / 100 / leverage), symbol)
           if (!buyOrderShort && !sellOrderShort) {
             // 不是部分买入持仓且没有挂卖单
             if (nowProfit > profit) {

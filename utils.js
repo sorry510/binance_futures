@@ -42,8 +42,16 @@ function log(text, flag = null) {
  * @param {*} price
  * @returns Number
  */
-function roundOrderPrice(price) {
-  if (price > 1000) {
+function roundOrderPrice(price, symbol = null) {
+  const whiteSymbols = {
+    'MKRUSDT': 1,
+    'CRVUSDT': 3,
+    'XTZUSDT': 3,
+  }
+  if (whiteSymbols[symbol]) {
+    return round(price, whiteSymbols[symbol])
+  }
+  if (price > 500) {
     return round(price, 1)
   } else if (price > 10) {
     return round(price, 2)
