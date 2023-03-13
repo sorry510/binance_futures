@@ -63,6 +63,17 @@ async function getAccount() {
 }
 
 /**
+ * 当前账户Balance
+ * @returns
+ */
+async function getBalance() {
+  const result = await binance.futuresBalance()
+  weight += 5
+  log(`${__function}: ${weight}`, flag)
+  return result
+}
+
+/**
  * @document ./doc/futuresAccount.js
  * @returns
  */
@@ -307,6 +318,7 @@ module.exports = {
   resetWeight,
   getWeight,
   getAccount,
+  getBalance,
   getPosition,
   // getPrices,
   getMaCompare,

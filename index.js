@@ -56,8 +56,8 @@ async function run() {
   }) // 在差距范围内跌的最多的币
 
   let coins = []
-  if (posiSymbols.length / allSymbols.length > 0.66) {
-    // 2/3的币都在涨,只买多
+  if (posiSymbols.length / allSymbols.length > 0.3) {
+    // 1/3的币都在涨,可以买多
     if (posiSymbol) {
       coins.push({
         symbol: posiSymbol.symbol,
@@ -65,29 +65,14 @@ async function run() {
         canShort: false, // 开启空单
       })
     }
-  } else if (negaSymbols.length / allSymbols.length > 0.66) {
-    // 2/3的币都在跌,只买空
+  }
+  if (negaSymbols.length / allSymbols.length > 0.3) {
+    // 1/3的币都在跌,可以买空
     if (negaSymbol) {
       coins.push({
         symbol: negaSymbol.symbol,
         canLong: false, // 开启多单
         canShort: true, // 开启空单
-      })
-    }
-  } else {
-    // 在最低的开启空单，最高的开启多单
-    if (negaSymbol) {
-      coins.push({
-        symbol: negaSymbol.symbol,
-        canLong: false, // 开启多单
-        canShort: true, // 开启空单
-      })
-    }
-    if (posiSymbol) {
-      coins.push({
-        symbol: posiSymbol.symbol,
-        canLong: true, // 开启多单
-        canShort: false, // 开启空单
       })
     }
   }
@@ -202,9 +187,6 @@ async function run() {
         item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSideShort
       ) // 查询平空的单
       const positionShort = positions.find(item => item.symbol === symbol && item.positionSide === positionSideShort) // 是否有空头当前的持仓
-
-      // console.log(JSON.stringify(positionShort), JSON.stringify(positionLong))
-      // process.exit()
 
       if (positionLong && canLong) {
         if (positionLong.positionAmt > 0) {
