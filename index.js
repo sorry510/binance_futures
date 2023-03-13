@@ -41,40 +41,56 @@ async function run() {
   const negaSymbols = sortAllSymbols.filter(item => item.percentChange <= 0) // 跌的币
 
   const posiSymbolsReverse = posiSymbols.reverse() // 从高到低排
-  const posiSymbol = posiSymbolsReverse.find((item, key) => {
+  const posiSymbolFilter = posiSymbolsReverse.filter((item, key) => {
     if (key < posiSymbolsReverse.length - 1) {
       const perCha = item.percentChange - posiSymbolsReverse[key + 1].percentChange // 2个币种之间的涨幅差
       return perCha > cha[0] && perCha < cha[1]
     }
-  }) // 在差距范围内涨的最多的币
+    return false
+  }) // 2个币涨幅相差在范围内的币
 
-  const negaSymbol = negaSymbols.find((item, key) => {
+  const negaSymbolFilter = negaSymbols.filter((item, key) => {
     if (key < negaSymbols.length - 1) {
       const perCha = negaSymbols[key + 1].percentChange - item.percentChange // 2个币种之间的涨幅差
       return perCha > cha[0] && perCha < cha[1]
     }
-  }) // 在差距范围内跌的最多的币
+    return false
+  }) // 2个币跌幅相差在范围内的币
 
   let coins = []
-  if (posiSymbols.length / allSymbols.length > 0.3) {
-    // 1/3的币都在涨,可以买多
-    if (posiSymbol) {
+  if (posiSymbols.length / allSymbols.length > 0.7) {
+    // 70%的币都在涨,可以买多2个
+    posiSymbolFilter.slice(0, 2).map(function(item) {
       coins.push({
-        symbol: posiSymbol.symbol,
+        symbol: item.symbol,
         canLong: true, // 开启多单
         canShort: false, // 开启空单
       })
-    }
-  }
-  if (negaSymbols.length / allSymbols.length > 0.3) {
-    // 1/3的币都在跌,可以买空
-    if (negaSymbol) {
+    })
+  } else if (negaSymbols.length / allSymbols.length > 0.7) {
+    // 70%的币都在涨,可以买空2个
+    negaSymbolFilter.slice(0, 2).map(function(item) {
       coins.push({
-        symbol: negaSymbol.symbol,
+        symbol: item.symbol,
         canLong: false, // 开启多单
         canShort: true, // 开启空单
       })
-    }
+    })
+  } else {
+    posiSymbolFilter.slice(0, 1).map(function(item) {
+      coins.push({
+        symbol: item.symbol,
+        canLong: true, // 开启多单
+        canShort: false, // 开启空单
+      })
+    })
+    negaSymbolFilter.slice(0, 1).map(function(item) {
+      coins.push({
+        symbol: item.symbol,
+        canLong: false, // 开启多单
+        canShort: true, // 开启空单
+      })
+    })
   }
   if (coins.length === 0) {
     log('没有发现适合交易的币种，请等待')
