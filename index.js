@@ -171,7 +171,7 @@ async function run() {
       const positionSideShort = 'SHORT'
       let { symbol, canLong, canShort } = coin
 
-      const [ma2, ma20] = await binance.getMaCompare(symbol, '3m', [2, 20]) // 3min的kline 2日线 与 20日线
+      const [ma2, ma20] = await binance.getMaCompare(symbol, '1m', [3, 30]) // 1min的kline 最近3条均值 与 30条的均值
 
       if (ma2 >= ma20) {
         // 涨的趋势, 不可以做空
@@ -182,6 +182,7 @@ async function run() {
       }
 
       if (!canLong && !canShort) {
+        log(symbol + ':没有达到条件不可开仓')
         return
       }
 
@@ -202,7 +203,7 @@ async function run() {
       ) // 查询平空的单
       const positionShort = positions.find(item => item.symbol === symbol && item.positionSide === positionSideShort) // 是否有空头当前的持仓
 
-      // console.log(JSON.stringify(positionShort))
+      // console.log(JSON.stringify(positionShort), JSON.stringify(positionLong))
       // process.exit()
 
       if (positionLong && canLong) {
