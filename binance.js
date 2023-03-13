@@ -296,7 +296,7 @@ if (config.websocket) {
             updateTime: obj.eventTime,
           })
         })
-        log(`${obj.symbol}:${obj.percentChange}`)
+        log(`${obj.symbol}:${obj.percentChange}`, false)
       }
       lock = false
     }
