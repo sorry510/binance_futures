@@ -417,9 +417,9 @@ async function run() {
 }
 
 ;(async () => {
-  // log('database sync start')
-  // await sleep(5 * 1000)
-  // log('database sync success')
+  log('database sync start')
+  await sleep(5 * 1000)
+  log('database sync success')
   while (true) {
     // binance.resetWeight()
     try {
