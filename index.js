@@ -24,8 +24,6 @@ async function getPrice(symbol) {
 }
 
 async function run() {
-  // await createTableIF() // 创建数据库
-
   /************************************************寻找交易币种 start******************************************************************* */
   const allSymbols = await tries(async () => await knex('symbols'))
   if (!Array.isArray(allSymbols)) {
@@ -122,17 +120,25 @@ async function run() {
   //     !currentSymbols.has(item.symbol) && // 非当前要挂单的币种
   //     !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
   // )
-  // if (openOrderFilter.length > 0) {
-  //   // 撤销挂单
-  //   await Promise.all(
-  //     openOrderFilter.map(async order => {
-  //       await binance.cancelOrder(order.symbol, order.orderId) // 撤销挂单
-  //     })
-  //   )
-  // }
+  // await Promise.all(
+  //   openOrderFilter.map(async buyOrder => {
+  //     // 有挂单，检查是否超时，超时取消挂单
+  //     const nowTime = +new Date()
+  //     if (nowTime > Number(buyOrder.updateTime) + buyTimeOut * 1000) {
+  //       const result = await binance.cancelOrder(buyOrder.symbol, buyOrder.orderId) // 撤销订单
+  //       if (result.code) {
+  //         notify.notifyCancelOrderFail(buyOrder.symbol, result.msg)
+  //       } else {
+  //         notify.notifyCancelOrderSuccess(buyOrder.symbol)
+  //       }
+  //       log('撤销订单')
+  //       log(result)
+  //     }
+  //   })
+  // )
   /*************************************************撤销挂单 end************************************************************ */
 
-  /*************************************************强制平仓 start************************************************************ */
+  /*************************************************强制平仓那些非当前交易币和白名单币 start************************************************************ */
   const positionFilter = positions.filter(
     item =>
       Number(item.positionAmt) != 0 && // 有持仓的
@@ -140,7 +146,7 @@ async function run() {
       !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
   )
   if (positionFilter.length > 0) {
-    // 强制平仓
+    // 强制平仓止损
     await Promise.all(
       positionFilter.map(async posi => {
         const positionAmt = Math.abs(posi.positionAmt) // 空单为负数
@@ -150,14 +156,22 @@ async function run() {
           // 收益在止盈之外的
           if (posi.positionSide === 'LONG') {
             // 存在多头,平多
-            await binance.sellMarket(posi.symbol, positionAmt, {
-              positionSide: posi.positionSide,
-            })
+            const [k1, k2] = await binance.getMaCompare(posi.symbol, '1m', [3, 30]) // 1min的kline 最近3条均值 与 30条的均值
+            if (k1 < k2) {
+              // 还是再跌的趋势中
+              await binance.sellMarket(posi.symbol, positionAmt, {
+                positionSide: posi.positionSide,
+              })
+            }
           } else if (posi.positionSide === 'SHORT') {
             // 存在空头,平空
-            await binance.buyMarket(posi.symbol, positionAmt, {
-              positionSide: posi.positionSide,
-            })
+            const [k1, k2] = await binance.getMaCompare(posi.symbol, '1m', [3, 30]) // 1min的kline 最近3条均值 与 30条的均
+            if (k1 > k2) {
+              // 还是在涨的趋势中
+              await binance.buyMarket(posi.symbol, positionAmt, {
+                positionSide: posi.positionSide,
+              })
+            }
           }
         }
       })
@@ -172,20 +186,12 @@ async function run() {
       const positionSideShort = 'SHORT'
       let { symbol, canLong, canShort } = coin
 
-      const [ma2, ma20] = await binance.getMaCompare(symbol, '1m', [3, 30]) // 1min的kline 最近3条均值 与 30条的均值
-
-      if (ma2 >= ma20) {
-        // 涨的趋势, 不可以做空
-        canShort = false
-      } else {
-        // 跌的趋势, 不可以做多
-        canLong = false
-      }
-
       if (!canLong && !canShort) {
         log(symbol + ':没有达到条件不可开仓')
         return
       }
+
+      const [k1, k2, k3] = await binance.getMaCompare(symbol, '1m', [3, 30, 6]) // 1min的kline 最近 n 条值
 
       // const allOpenOrders = await binance.getOpenOrder(symbol) // 当前币种的订单
       const buyOrder = allOpenOrders.find(
@@ -210,10 +216,13 @@ async function run() {
           const { unRealizedProfit, entryPrice, positionAmt } = positionLong
           const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
           const sellPrice = roundOrderPrice(entryPrice * (1 + profit / 100 / leverage), symbol)
+          if (k1 > k3) {
+            log(symbol + ':处于上升期, 多仓继续等待')
+            return
+          }
           if (!buyOrder && !sellOrder) {
             // 不是部分买入持仓且没有挂卖单
             if (nowProfit > profit) {
-              // 当前价格高于止盈率
               const result = await binance.sellMarket(symbol, positionAmt, {
                 positionSide,
               })
@@ -265,8 +274,12 @@ async function run() {
             }
           }
         } else {
-          // 没有持仓
           if (!buyOrder) {
+            // 没有持仓
+            if (k1 < k2) {
+              log(symbol + ':下跌期, 不开多仓')
+              return
+            }
             // 没有挂买单
             const { buyPrice } = await getPrice(symbol)
             if (buyOrderShort && buyPrice < buyOrderShort.entryPrice) {
@@ -286,7 +299,7 @@ async function run() {
               notify.notifyBuyOrderSuccess(symbol, quantity, buyPrice)
               await sleep(1 * 1000)
             }
-            log('开仓-开多')
+            log('开仓-开多:' + symbol + ',quantity' + quantity)
             log(result)
           } else {
             // 有挂单，检查是否超时，超时取消挂单
@@ -314,6 +327,10 @@ async function run() {
           const { unRealizedProfit, entryPrice } = positionShort
           const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
           const sellPrice = roundOrderPrice(entryPrice * (1 - profit / 100 / leverage), symbol)
+          if (k1 < k2) {
+            log(symbol + ':处于下跌期, 空仓继续等待')
+            return
+          }
           if (!buyOrderShort && !sellOrderShort) {
             // 不是部分买入持仓且没有挂卖单
             if (nowProfit > profit) {
@@ -373,6 +390,10 @@ async function run() {
           // 没有持仓
           if (!buyOrderShort) {
             // 没有挂买单
+            if (k1 > k3) {
+              log(symbol + ':上涨期, 不开空仓')
+              return
+            }
             const { sellPrice } = await getPrice(symbol)
             if (buyOrder && sellPrice > buyOrder.entryPrice) {
               // 如果空单开除价格高于买多的价格，就不再开空单，直到买多的单平仓
@@ -391,7 +412,7 @@ async function run() {
               notify.notifyBuyOrderSuccess(symbol, quantity, sellPrice, '做空')
               await sleep(1 * 1000)
             }
-            log('开仓-开空')
+            log('开仓-开空:' + symbol + ',quantity' + quantity)
             log(result2)
           } else {
             // 有挂单，检查是否超时，超时取消挂单
