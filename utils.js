@@ -74,7 +74,7 @@ function roundOrderQuantity(price, quantity) {
   } else if (price > 0.1) {
     return round(quantity, 0)
   } else {
-    return round(quantity, 2)
+    return round(quantity, 0)
   }
 }
 
