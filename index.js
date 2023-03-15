@@ -286,6 +286,7 @@ async function run() {
               notify.notifyBuyOrderSuccess(symbol, quantity, buyPrice)
               await sleep(1 * 1000)
             }
+            log('开仓-开多')
             log(result)
           } else {
             // 有挂单，检查是否超时，超时取消挂单
@@ -299,6 +300,7 @@ async function run() {
                 notify.notifyCancelOrderSuccess(symbol)
                 await sleep(10 * 1000)
               }
+              log('撤销订单')
               log(result)
             }
           }
@@ -363,6 +365,7 @@ async function run() {
                 )
                 await sleep(3 * 60 * 1000)
               }
+              log('止损')
               log(result)
             }
           }
@@ -388,6 +391,7 @@ async function run() {
               notify.notifyBuyOrderSuccess(symbol, quantity, sellPrice, '做空')
               await sleep(1 * 1000)
             }
+            log('开仓-开空')
             log(result2)
           } else {
             // 有挂单，检查是否超时，超时取消挂单
@@ -401,6 +405,7 @@ async function run() {
                 notify.notifyCancelOrderSuccess(symbol)
                 await sleep(10 * 1000)
               }
+              log('撤销订单')
               log(result)
             }
           }
@@ -412,9 +417,9 @@ async function run() {
 }
 
 ;(async () => {
-  log('database sync start')
-  await sleep(5 * 1000)
-  log('database sync success')
+  // log('database sync start')
+  // await sleep(5 * 1000)
+  // log('database sync success')
   while (true) {
     // binance.resetWeight()
     try {
@@ -423,6 +428,7 @@ async function run() {
       await sleep(sleep_time * 1000)
       log(`wait ${sleep_time} second`)
     } catch (e) {
+      log('报错了')
       log(e)
       notify.notifyServiceError(e + 'stop 1 min')
       await sleep(1 * 60 * 1000)

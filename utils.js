@@ -67,15 +67,11 @@ function roundOrderPrice(price, symbol = null) {
 }
 
 function roundOrderQuantity(price, quantity) {
-  if (price > 500) {
-    return round(quantity, 4)
-  } else if (price > 10) {
-    return round(quantity, 3)
-  } else if (quantity > 1) {
+  if (price > 10) {
     return round(quantity, 2)
-  } else if (price > 0.1) {
+  } else if (price > 1) {
     return round(quantity, 1)
-  } else if (price > 0.01) {
+  } else if (price > 0.1) {
     return round(quantity, 0)
   } else {
     return round(quantity, 2)

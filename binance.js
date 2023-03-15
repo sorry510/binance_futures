@@ -201,7 +201,7 @@ async function orderStatus(symbol, orderId) {
  * @param Number orderId
  * @param {} otherOptions https://binance-docs.github.io/apidocs/futures/cn/#trade-6
  */
-async function depth(symbol, limit = 20) {
+async function depth(symbol, limit = 50) {
   weight += 2
   const result = await binance.futuresDepth(symbol, { limit })
   log(`${__function}: ${weight}`, flag)
