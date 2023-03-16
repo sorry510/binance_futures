@@ -49,7 +49,7 @@ app.use(
     secret, // 签名的密钥 或 PublicKey
     algorithms: ['HS256'],
   }).unless({
-    path: ['/login', webIndex], // 指定路径不经过 Token 解析
+    path: ['/login', '/pull', webIndex], // 指定路径不经过 Token 解析
   })
 )
 
@@ -176,6 +176,12 @@ app.post('/start', (req, res) => {
 // 退出
 app.post('/stop', (req, res) => {
   const result = shell.exec(web.command.stop)
+  res.json(resJson(200, result))
+})
+
+// git hook 拉代码
+app.post('/pull', (req, res) => {
+  const result = shell.exec('git pull')
   res.json(resJson(200, result))
 })
 
