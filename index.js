@@ -186,14 +186,27 @@ async function run() {
       const positionSideShort = 'SHORT'
       let { symbol, canLong, canShort } = coin
 
+      const [k1, k2, k3, k4] = await binance.getMaCompare(symbol, '1m', [3, 30, 1, 2]) // 1min的kline 最近 n 条值
+      const [m1, m2] = await binance.getMaCompare(symbol, '3m', [2, 20]) // 3min的kline 最近 n 条值
+
+      if (k1 > k2 && m1 > m2) {
+        // 涨的时刻
+        canLong = true
+        canShort = false
+      } else if (k1 < k2 && m1 < m2) {
+        // 跌的时刻
+        canLong = false
+        canShort = true
+      } else {
+        canLong = false
+        canShort = false
+      }
+
       if (!canLong && !canShort) {
         log(symbol + ':没有达到条件不可开仓')
         return
       }
 
-      const [k1, k2, k3] = await binance.getMaCompare(symbol, '1m', [3, 30, 6]) // 1min的kline 最近 n 条值
-
-      // const allOpenOrders = await binance.getOpenOrder(symbol) // 当前币种的订单
       const buyOrder = allOpenOrders.find(
         item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSide
       ) // 查询开多的单
@@ -216,7 +229,7 @@ async function run() {
           const { unRealizedProfit, entryPrice, positionAmt } = positionLong
           const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
           const sellPrice = roundOrderPrice(entryPrice * (1 + profit / 100 / leverage), symbol)
-          if (k1 > k3) {
+          if (k3 > k4) {
             log(symbol + ':处于上升期, 多仓继续等待')
             return
           }
@@ -276,10 +289,6 @@ async function run() {
         } else {
           if (!buyOrder) {
             // 没有持仓
-            if (k1 < k2) {
-              log(symbol + ':下跌期, 不开多仓')
-              return
-            }
             // 没有挂买单
             const { buyPrice } = await getPrice(symbol)
             if (buyOrderShort && buyPrice < buyOrderShort.entryPrice) {
@@ -330,7 +339,7 @@ async function run() {
           const { unRealizedProfit, entryPrice } = positionShort
           const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
           const sellPrice = roundOrderPrice(entryPrice * (1 - profit / 100 / leverage), symbol)
-          if (k1 < k3) {
+          if (k3 < k4) {
             log(symbol + ':处于下跌期, 空仓继续等待')
             return
           }
@@ -393,10 +402,6 @@ async function run() {
           // 没有持仓
           if (!buyOrderShort) {
             // 没有挂买单
-            if (k1 > k2) {
-              log(symbol + ':上涨期, 不开空仓')
-              return
-            }
             const { sellPrice } = await getPrice(symbol)
             if (buyOrder && sellPrice > buyOrder.entryPrice) {
               // 如果空单开除价格高于买多的价格，就不再开空单，直到买多的单平仓
@@ -463,6 +468,11 @@ async function run() {
   }
 
   // const result = await getPrice('BTCUSDT') // { buyPrice: 24299.2, sellPrice: 24304.8 }
+  // const result = await binance.getMaCompare('FILUSDT', '3m', [2, 20])
+  // console.log(result)
+
+  // const result2 = await binance.getMaCompare('FILUSDT', '3m', [2, 20]) // 1min的kline 最近 n 条值
+  // console.log(result2)
 
   // const result = await binance.buyLimit('DOTUSDT', 0.5, 36, {
   //   positionSide: 'LONG',
