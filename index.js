@@ -218,7 +218,7 @@ async function run() {
           const { unRealizedProfit, entryPrice, positionAmt } = positionLong
           const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
           const sellPrice = roundOrderPrice(entryPrice * (1 + profit / 100 / leverage), symbol)
-          if (k1 > k3) {
+          if (k1 > k2) {
             log(symbol + ':处于上升期, 多仓继续等待')
             return
           }
@@ -392,7 +392,7 @@ async function run() {
           // 没有持仓
           if (!buyOrderShort) {
             // 没有挂买单
-            if (k1 > k3) {
+            if (k1 > k2) {
               log(symbol + ':上涨期, 不开空仓')
               return
             }
