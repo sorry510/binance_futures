@@ -18,10 +18,8 @@ async function getPrice(symbol) {
     return num > 0 ? sum / num : 0
   }
   return {
-    // buyPrice: roundOrderPrice(avg(result.bids), symbol), // 平均买单价格(低)
-    // sellPrice: roundOrderPrice(avg(result.asks), symbol), // 平均卖单价格(高)
-    sellPrice: roundOrderPrice(avg(result.bids), symbol), // 平均买单价格(低)
-    buyPrice: roundOrderPrice(avg(result.asks), symbol), // 平均卖单价格(高)
+    buyPrice: roundOrderPrice(avg(result.bids), symbol), // 平均买单价格(低)
+    sellPrice: roundOrderPrice(avg(result.asks), symbol), // 平均卖单价格(高)
   }
 }
 
@@ -291,9 +289,12 @@ async function run() {
             const quantity = roundOrderQuantity(buyPrice, (usdt / buyPrice) * leverage) // 购买数量
             await binance.leverage(symbol, leverage) // 修改合约倍数
             await binance.marginType(symbol) // 修改为逐仓模式
-            const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
+            const result = await binance.buyMarket(symbol, Number(quantity), {
               positionSide,
-            }) // 开仓-开多
+            }) // 市价开仓-开多
+            // const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
+            //   positionSide,
+            // }) // 开仓-开多
             if (result.code) {
               notify.notifyBuyOrderFail(symbol, result.msg)
               await sleep(60 * 1000)
@@ -404,9 +405,12 @@ async function run() {
             await binance.leverage(symbol, leverage) // 修改合约倍数
             await binance.marginType(symbol) // 修改为逐仓模式
             const quantity = roundOrderQuantity(sellPrice, (usdt / sellPrice) * leverage) // 购买数量
-            const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
+            const result2 = await binance.sellMarket(symbol, Number(quantity), {
               positionSide: positionSideShort,
-            }) // 开仓-开空
+            }) // 开仓-开空市价
+            // const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
+            //   positionSide: positionSideShort,
+            // }) // 开仓-开空
             if (result2.code) {
               notify.notifyBuyOrderFail(symbol, result2.msg)
               await sleep(60 * 1000)
