@@ -18,8 +18,10 @@ async function getPrice(symbol) {
     return num > 0 ? sum / num : 0
   }
   return {
-    buyPrice: roundOrderPrice(avg(result.bids), symbol),
-    sellPrice: roundOrderPrice(avg(result.asks), symbol),
+    // buyPrice: roundOrderPrice(avg(result.bids), symbol), // 平均买单价格(低)
+    // sellPrice: roundOrderPrice(avg(result.asks), symbol), // 平均卖单价格(高)
+    sellPrice: roundOrderPrice(avg(result.bids), symbol), // 平均买单价格(低)
+    buyPrice: roundOrderPrice(avg(result.asks), symbol), // 平均卖单价格(高)
   }
 }
 
@@ -401,7 +403,7 @@ async function run() {
             }
             await binance.leverage(symbol, leverage) // 修改合约倍数
             await binance.marginType(symbol) // 修改为逐仓模式
-            const quantity = roundOrderQuantity(sellPrice, (usdt / buyPrice) * leverage) // 购买数量
+            const quantity = roundOrderQuantity(sellPrice, (usdt / sellPrice) * leverage) // 购买数量
             const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
               positionSide: positionSideShort,
             }) // 开仓-开空
@@ -455,6 +457,8 @@ async function run() {
       await sleep(1 * 60 * 1000)
     }
   }
+
+  // const result = await getPrice('BTCUSDT') // { buyPrice: 24299.2, sellPrice: 24304.8 }
 
   // const result = await binance.buyLimit('DOTUSDT', 0.5, 36, {
   //   positionSide: 'LONG',
