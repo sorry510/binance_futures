@@ -138,7 +138,7 @@ async function run() {
   // )
   /*************************************************撤销挂单 end************************************************************ */
 
-  /*************************************************强制平仓那些非当前交易币和白名单币 start************************************************************ */
+  /*************************************************平仓那些非当前交易币和白名单币 start************************************************************ */
   const positionFilter = positions.filter(
     item =>
       Number(item.positionAmt) != 0 && // 有持仓的
@@ -146,12 +146,12 @@ async function run() {
       !excludeOrderSymbols.has(item.symbol) // 非手动交易的白名单
   )
   if (positionFilter.length > 0) {
-    // 强制平仓止损
     await Promise.all(
       positionFilter.map(async posi => {
         const positionAmt = Math.abs(posi.positionAmt) // 空单为负数
         const { unRealizedProfit, entryPrice } = posi
         const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
+        // 强制平仓,止损
         if (nowProfit <= -loss || nowProfit >= loss) {
           // 收益在止盈之外的
           if (posi.positionSide === 'LONG') {
@@ -168,6 +168,30 @@ async function run() {
             const [k1, k2] = await binance.getMaCompare(posi.symbol, '1m', [3, 30]) // 1min的kline 最近3条均值 与 30条的均
             if (k1 > k2) {
               // 还是在涨的趋势中
+              await binance.buyMarket(posi.symbol, positionAmt, {
+                positionSide: posi.positionSide,
+              })
+            }
+          }
+        }
+        // 多仓平仓，止盈
+        if (nowProfit >= profit) {
+          if (posi.positionSide === 'LONG') {
+            const [k1, k2, k3] = await binance.getMaCompare(posi.symbol, '1m', [1, 2, 4])
+            if (k1 < k2 &&  k2 < k3) {
+              // 在跌
+              await binance.sellMarket(posi.symbol, positionAmt, {
+                positionSide: posi.positionSide,
+              })
+            }
+          }
+        }
+        // 空仓平仓，止盈
+        if (nowProfit >= profit) {
+          if (posi.positionSide === 'SHORT') {
+            const [k1, k2, k3] = await binance.getMaCompare(posi.symbol, '1m', [1, 2, 4])
+            if (k1 > k2 && k2 > k3) {
+              // 在涨
               await binance.buyMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
