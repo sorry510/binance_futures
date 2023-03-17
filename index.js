@@ -187,13 +187,12 @@ async function run() {
       let { symbol, canLong, canShort } = coin
 
       const [k1, k2, k3, k4] = await binance.getMaCompare(symbol, '1m', [3, 30, 1, 2]) // 1min的kline 最近 n 条值
-      const [m1, m2] = await binance.getMaCompare(symbol, '3m', [2, 20]) // 3min的kline 最近 n 条值
-
-      if (k1 > k2 && m1 > m2) {
+      const [m1, m2, m3] = await binance.getMaCompare(symbol, '3m', [20, 20 * 2, 20 * 4]) // 3min的kline 近1小时和近4小时
+      if (m1 > m2 && m2 > m3) {
         // 涨的时刻
         canLong = true
         canShort = false
-      } else if (k1 < k2 && m1 < m2) {
+      } else if (m1 < m2 && m2 < m3) {
         // 跌的时刻
         canLong = false
         canShort = true
@@ -288,6 +287,10 @@ async function run() {
           }
         } else {
           if (!buyOrder) {
+            if (k1 > k2) {
+              // 短时上涨期，等低价买入
+              return
+            }
             // 没有持仓
             // 没有挂买单
             const { buyPrice } = await getPrice(symbol)
@@ -298,12 +301,12 @@ async function run() {
             const quantity = roundOrderQuantity(buyPrice, (usdt / buyPrice) * leverage) // 购买数量
             await binance.leverage(symbol, leverage) // 修改合约倍数
             await binance.marginType(symbol) // 修改为逐仓模式
-            const result = await binance.buyMarket(symbol, Number(quantity), {
-              positionSide,
-            }) // 市价开仓-开多
-            // const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
+            // const result = await binance.buyMarket(symbol, Number(quantity), {
             //   positionSide,
-            // }) // 开仓-开多
+            // }) // 市价开仓-开多
+            const result = await binance.buyLimit(symbol, Number(quantity), buyPrice, {
+              positionSide,
+            }) // 开仓-开多
             if (result.code) {
               notify.notifyBuyOrderFail(symbol, result.msg)
               await sleep(60 * 1000)
@@ -401,6 +404,10 @@ async function run() {
         } else {
           // 没有持仓
           if (!buyOrderShort) {
+            if (k1 < k2) {
+              // 短时下跌期，等高价买入
+              return
+            }
             // 没有挂买单
             const { sellPrice } = await getPrice(symbol)
             if (buyOrder && sellPrice > buyOrder.entryPrice) {
@@ -410,12 +417,12 @@ async function run() {
             await binance.leverage(symbol, leverage) // 修改合约倍数
             await binance.marginType(symbol) // 修改为逐仓模式
             const quantity = roundOrderQuantity(sellPrice, (usdt / sellPrice) * leverage) // 购买数量
-            const result2 = await binance.sellMarket(symbol, Number(quantity), {
-              positionSide: positionSideShort,
-            }) // 开仓-开空市价
-            // const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
+            // const result2 = await binance.sellMarket(symbol, Number(quantity), {
             //   positionSide: positionSideShort,
-            // }) // 开仓-开空
+            // }) // 开仓-开空市价
+            const result2 = await binance.sellLimit(symbol, Number(quantity), sellPrice, {
+              positionSide: positionSideShort,
+            }) // 开仓-开空
             if (result2.code) {
               notify.notifyBuyOrderFail(symbol, result2.msg)
               await sleep(60 * 1000)
