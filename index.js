@@ -314,7 +314,7 @@ async function run() {
               notify.notifyBuyOrderSuccess(symbol, quantity, buyPrice)
               await sleep(1 * 1000)
             }
-            log('开仓-开多:' + symbol + ',quantity' + quantity)
+            log(`开仓-开多:${symbol},quantity:${quantity},price:${buyPrice}`)
             log(result)
           } else {
             // 有挂单，检查是否超时，超时取消挂单
@@ -430,7 +430,7 @@ async function run() {
               notify.notifyBuyOrderSuccess(symbol, quantity, sellPrice, '做空')
               await sleep(1 * 1000)
             }
-            log('开仓-开空:' + symbol + ',quantity' + quantity)
+            log(`开仓-开空:${symbol},quantity:${quantity},price:${sellPrice}`)
             log(result2)
           } else {
             // 有挂单，检查是否超时，超时取消挂单
