@@ -16,6 +16,7 @@ module.exports = {
 
   sleep_time: 1, // 轮训时间
   websocket: true, // 更新币种信息
+  strategy: 'line1', // 交易策略
 
   web: {
     secret: '323',

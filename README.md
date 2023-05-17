@@ -23,3 +23,6 @@ node binance.js // 初始化数据库,运行 10 秒后手动停止
 node index.js // 开启服务
 node web/app.js // 开启前端管理界面
 ```
+
+### 修改交易策略
+> 仿照
