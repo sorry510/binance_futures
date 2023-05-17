@@ -38,11 +38,11 @@ async function getLongOrShort(symbol) {
  * @returns Boolean
  */
 async function canOrderComplete(symbol, side) {
-    const [k1, k2, k3] = await binance.getMaCompare(symbol, '1m', [1, 2, 3]) // 1min 线最近3条
+    const [k1, k2] = await binance.getMaCompare(symbol, '1m', [1, 2]) // 1min 线最近3条
     if (side === 'LONG') {
-        return k1 < k2 && k2 < k3  // 价格在下跌中
+        return k1 < k2  // 价格在下跌中
     } else if (side === 'SHORT') {
-        return k1 > k2 && k2 > k3 // 价格在上涨中
+        return k1 > k2 // 价格在上涨中
     } else {
         return false;
     }
