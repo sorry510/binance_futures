@@ -152,37 +152,48 @@ async function run() {
         const positionAmt = Math.abs(posi.positionAmt) // 空单为负数
         const { unRealizedProfit, entryPrice } = posi
         const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率(正为盈利，负为亏损)
-        const [k1, k2, k3] = await binance.getMaCompare(posi.symbol, '1m', [1, 2, 3]) // 1min 线最近3条
 
         // 平仓(止损)
         if (nowProfit <= -loss) {
           // 做多时，价格持续下跌中
-          if (posi.positionSide === 'LONG' && k1 < k2 && k2 < k3) {
-            await binance.sellMarket(posi.symbol, positionAmt, {
-              positionSide: posi.positionSide,
-            })
+          if (posi.positionSide === 'LONG') {
+            const canOrder = await canOrderComplete(posi.symbol, 'LONG')
+            if (canOrder) {
+              await binance.sellMarket(posi.symbol, positionAmt, {
+                positionSide: posi.positionSide,
+              })
+            }
           }
           // 做空时, 价格持续上涨中
-          if (posi.positionSide === 'SHORT' && k1 > k2 && k2 > k3) {
-            await binance.buyMarket(posi.symbol, positionAmt, {
-              positionSide: posi.positionSide,
-            })
+          if (posi.positionSide === 'SHORT') {
+            const canOrder = await canOrderComplete(posi.symbol, 'SHORT')
+            if (canOrder) {
+              await binance.buyMarket(posi.symbol, positionAmt, {
+                positionSide: posi.positionSide,
+              })
+            }
           }
         }
 
         // 平仓(止盈)
         if (nowProfit >= profit) {
           // 做多时，价格下跌中
-          if (posi.positionSide === 'LONG' && k1 < k2 &&  k2 < k3) {
-            await binance.sellMarket(posi.symbol, positionAmt, {
-              positionSide: posi.positionSide,
-            })
+          if (posi.positionSide === 'LONG') {
+            const canOrder = await canOrderComplete(posi.symbol, 'LONG')
+            if (canOrder) {
+              await binance.sellMarket(posi.symbol, positionAmt, {
+                positionSide: posi.positionSide,
+              })
+            }
           }
           // 做空时, 价格上涨中
-          if (posi.positionSide === 'SHORT' && k1 > k2 && k2 > k3) {
-            await binance.buyMarket(posi.symbol, positionAmt, {
-              positionSide: posi.positionSide,
-            })
+          if (posi.positionSide === 'SHORT') {
+            const canOrder = await canOrderComplete(posi.symbol, 'SHORT')
+            if (canOrder) {
+              await binance.buyMarket(posi.symbol, positionAmt, {
+                positionSide: posi.positionSide,
+              })
+            }
           }
         }
       })
