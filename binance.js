@@ -112,6 +112,19 @@ async function getMaCompare(symbol, type, keys) {
 }
 
 /**
+ * 获取 kline 收盘价
+ * @param {*} symbol 
+ * @param {*} type 
+ * @param {*} nums 
+ */
+async function getKline(symbol, type, limit) {
+  let result = await binance.futuresCandles(symbol, type, { limit })
+  result = result.map(item => Number(item[4])).reverse() // 获取最新到以前的收盘价
+  return result
+}
+
+
+/**
  * 限价买入
  * @param string symbol
  * @param Number quantity
@@ -322,6 +335,7 @@ module.exports = {
   getPosition,
   // getPrices,
   getMaCompare,
+  getKline,
   buyLimit,
   sellLimit,
   buyMarket,

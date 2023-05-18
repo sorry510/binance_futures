@@ -57,7 +57,7 @@ async function run() {
   }) // 2个币跌幅相差在范围内的币
 
   let coins = []
-  if (posiSymbols.length / allSymbols.length > 0.7) {
+  if (posiSymbols.length / allSymbols.length > 0.75) {
     // 70%的币都在涨,可以买多2个
     posiSymbolFilter.slice(0, 2).map(function(item) {
       coins.push({
@@ -66,7 +66,7 @@ async function run() {
         canShort: false, // 开启空单
       })
     })
-  } else if (negaSymbols.length / allSymbols.length > 0.7) {
+  } else if (negaSymbols.length / allSymbols.length > 0.75) {
     // 70%的币都在涨,可以买空2个
     negaSymbolFilter.slice(0, 2).map(function(item) {
       coins.push({
