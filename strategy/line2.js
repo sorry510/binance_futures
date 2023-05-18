@@ -3,15 +3,15 @@ const binance = require('../binance')
 /**
  * 需要实现 getLongOrShort 和 canOrderComplete 方法
  * 
+ * 此策略适合快速交易，极小涨幅就卖出
  * 参考 config.js 配置
  * 
  * strategy: 'line1',
  * usdt: 10, // 交易金额 usdt
- * profit: 6, // 止盈率
- * loss: 6, // 止损率
+ * profit: 1.5, // 止盈率
+ * loss: 10, // 止损率
  * leverage: 10, // 合约倍数
  */
-
 
 /**
  * 是否可以创建订单
@@ -51,14 +51,7 @@ async function getLongOrShort(symbol) {
  * @returns Boolean
  */
 async function canOrderComplete(symbol, side) {
-    const [k1, k2] = await binance.getMaCompare(symbol, '1m', [1, 2]) // 1min 线最近3条
-    if (side === 'LONG') {
-        return k1 < k2  // 价格在下跌中
-    } else if (side === 'SHORT') {
-        return k1 > k2 // 价格在上涨中
-    } else {
-        return false;
-    }
+   return true
 }
 
 module.exports = {
