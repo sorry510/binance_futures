@@ -1,4 +1,5 @@
 const binance = require('../binance')
+const { isAsc, isDesc } = require('../utils')
 
 /**
  * 需要实现 getLongOrShort 和 canOrderComplete 方法
@@ -22,13 +23,13 @@ async function getLongOrShort(symbol) {
     let canLong = false
     let canShort = false
 
-    const [k1, k2, k3] = await binance.getMaCompare(symbol, '1m', [1, 3, 6]) // 1min的kline 最近 n 条值
-    const [m1, m2, m3] = await binance.getMaCompare(symbol, '3m', [20, 20 * 2, 20 * 4]) // 3min的kline 近1小时和近4小时
-    if (m1 > m2 && m2 > m3 && k1 > k2 && k2 > k3) {
+    const arr1 = await binance.getMaCompare(symbol, '1m', [1, 3, 5]) // 1min的kline 最近 n 条值
+    const arr2 = await binance.getMaCompare(symbol, '3m', [10, 10 * 2, 10 * 3]) // 3min的kline 近2小时
+    if (isDesc(arr1) && isDesc(arr2)) {
       // 涨的时刻
       canLong = true
       canShort = false
-    } else if (m1 < m2 && m2 < m3 && k1 < k2 && k2 < k3) {
+    } else if (isAsc(arr1) && isAsc(arr2)) {
       // 跌的时刻
       canLong = false
       canShort = true

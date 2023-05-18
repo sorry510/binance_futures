@@ -104,6 +104,14 @@ async function tries(fn, max = 5, sleepTime = 1000, isThrow = false) {
   }
 }
 
+function isAsc(arr) {
+  return arr.reduce(([result, last], now) => [now > last && result, now ], [true, arr[0]-1])[0]
+}
+
+function isDesc(arr) {
+  return arr.reduce(([result, last], now) => [now < last && result, now ], [true, arr[0]+1])[0]
+}
+
 module.exports = {
   sleep,
   dateFormat,
@@ -111,4 +119,6 @@ module.exports = {
   roundOrderPrice,
   roundOrderQuantity,
   tries,
+  isAsc,
+  isDesc
 }
