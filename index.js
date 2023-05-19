@@ -462,13 +462,6 @@ async function run() {
     }
   }
 
-  // const result = await getPrice('BTCUSDT') // { buyPrice: 24299.2, sellPrice: 24304.8 }
-  // const result = await binance.getMaCompare('FILUSDT', '3m', [2, 20])
-  // console.log(result)
-
-  // const result2 = await binance.getMaCompare('FILUSDT', '3m', [2, 20]) // 1min的kline 最近 n 条值
-  // console.log(result2)
-
   // const result = await binance.buyLimit('DOTUSDT', 0.5, 36, {
   //   positionSide: 'LONG',
   // }) // 开仓-开多

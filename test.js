@@ -11,8 +11,8 @@ const binance = require('./binance')
 
 ;(async () => {
   const symbol = 'OPUSDT'
-  const [k1, k2, k3] = await binance.getMaCompare(symbol, '1m', [1, 3, 6]) // 1min的kline 最近 n 条值
+  const [k1, k2, k3] = await binance.getKlineAvg(symbol, '1m', [1, 3, 6]) // 1min的kline 最近 n 条值
   console.log(k1, k2, k3)
-  const [m1, m2, m3] = await binance.getMaCompare(symbol, '3m', [20, 20 * 2, 20 * 4]) // 3min的kline 近1小时和近4小时
+  const [m1, m2, m3] = await binance.getKlineAvg(symbol, '3m', [20, 20 * 2, 20 * 4]) // 3min的kline 近1小时和近4小时
   console.log(m1, m2, m3)
 })()

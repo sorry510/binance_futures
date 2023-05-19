@@ -23,8 +23,8 @@ async function getLongOrShort(symbol) {
     let canLong = false
     let canShort = false
 
-    const arr1 = await binance.getMaCompare(symbol, '1m', [1, 3, 5]) // 1min的kline 最近 n 条值
-    const arr2 = await binance.getMaCompare(symbol, '3m', [10, 10 * 2, 10 * 3]) // 3min的kline 近2小时
+    const arr1 = await binance.getKlineAvg(symbol, '1m', [1, 3, 5]) // 1min的kline 最近 n 条值
+    const arr2 = await binance.getKlineAvg(symbol, '3m', [10, 10 * 2, 10 * 3]) // 3min的kline 近2小时
     if (isDesc(arr1) && isDesc(arr2)) {
       // 涨的时刻
       canLong = true
