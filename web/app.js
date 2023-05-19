@@ -54,7 +54,6 @@ app.use(
 )
 
 app.use(function (err, req, res, next) {
-  console.log(req.path)
   if (req.path.includes('static') && !req.path.includes('index.html')) {
     // 避免静态资源被jwt校验
     next()
@@ -164,7 +163,8 @@ app.put('/config', (req, res) => {
     body: { code },
   } = req
   fs.writeFileSync(path.resolve(currentDir, '../config.js'), code)
-  res.json(resJson(200))
+  const result = shell.exec(web.command.start) // 重启服务
+  res.json(resJson(200, result))
 })
 
 // 开启
