@@ -310,7 +310,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifyBuyOrderSuccess(symbol, quantity, buyPrice)
-                await sleep(10 * 1000)
+                await sleep(30 * 1000)
               }
               log(`开仓-开多:${symbol},quantity:${quantity},price:${buyPrice}`)
               log(result)
@@ -415,7 +415,7 @@ async function run() {
                 await sleep(60 * 1000)
               } else {
                 notify.notifyBuyOrderSuccess(symbol, quantity, sellPrice, '做空')
-                await sleep(10 * 1000) // 开单成功后，暂停10秒中
+                await sleep(30 * 1000) // 开单成功后，暂停30秒中
                 log(`开仓-开空:${symbol},quantity:${quantity},price:${sellPrice}`)
               }
               log(result2)
