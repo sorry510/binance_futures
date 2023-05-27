@@ -2,10 +2,11 @@ const { exit } = require('process')
 const { round } = require('mathjs')
 const { sleep, log, roundOrderPrice, roundOrderQuantity, tries } = require('./utils')
 const { knex } = require('./db')
-const { usdt, profit, loss = 100, leverage, buyTimeOut, sleep_time, excludeSymbols, cha, strategy } = require('./config')
+const { usdt, profit, loss = 100, leverage, buyTimeOut, sleep_time, excludeSymbols, cha, strategy, strategyCoin } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
 const { getLongOrShort, canOrderComplete } = require(`./strategy/${strategy}`)
+const { getCoins } = require(`./strategy/${strategyCoin}`)
 
 async function getPrice(symbol) {
   const result = await binance.depth(symbol)
@@ -31,66 +32,7 @@ async function run() {
     notify.notifyServiceError(JSON.stringify(allSymbols))
     exit()
   }
-  const sortAllSymbols = allSymbols
-    .filter(item => item.enable == 1) // 查询所有开启的币种
-    .map(item => ({ ...item, percentChange: Number(item.percentChange) }))
-    .sort((a, b) => (a.percentChange < b.percentChange ? -1 : 1)) // 涨幅从小到大排序
-
-  const posiSymbols = sortAllSymbols.filter(item => item.percentChange > 0) // 涨的币
-  const negaSymbols = sortAllSymbols.filter(item => item.percentChange <= 0) // 跌的币
-
-  const posiSymbolsReverse = posiSymbols.reverse() // 从高到低排
-  const posiSymbolFilter = posiSymbolsReverse.filter((item, key) => {
-    if (key < posiSymbolsReverse.length - 1) {
-      const perCha = item.percentChange - posiSymbolsReverse[key + 1].percentChange // 2个币种之间的涨幅差
-      return perCha > cha[0] && perCha < cha[1]
-    }
-    return false
-  }) // 2个币涨幅相差在范围内的币
-
-  const negaSymbolFilter = negaSymbols.filter((item, key) => {
-    if (key < negaSymbols.length - 1) {
-      const perCha = negaSymbols[key + 1].percentChange - item.percentChange // 2个币种之间的涨幅差
-      return perCha > cha[0] && perCha < cha[1]
-    }
-    return false
-  }) // 2个币跌幅相差在范围内的币
-
-  let coins = []
-  if (posiSymbols.length / allSymbols.length > 0.75) {
-    // 70%的币都在涨,可以买多2个
-    posiSymbolFilter.slice(0, 2).map(function(item) {
-      coins.push({
-        symbol: item.symbol,
-        canLong: true, // 开启多单
-        canShort: false, // 开启空单
-      })
-    })
-  } else if (negaSymbols.length / allSymbols.length > 0.75) {
-    // 70%的币都在涨,可以买空2个
-    negaSymbolFilter.slice(0, 2).map(function(item) {
-      coins.push({
-        symbol: item.symbol,
-        canLong: false, // 开启多单
-        canShort: true, // 开启空单
-      })
-    })
-  } else {
-    posiSymbolFilter.slice(0, 1).map(function(item) {
-      coins.push({
-        symbol: item.symbol,
-        canLong: true, // 开启多单
-        canShort: false, // 开启空单
-      })
-    })
-    negaSymbolFilter.slice(0, 1).map(function(item) {
-      coins.push({
-        symbol: item.symbol,
-        canLong: false, // 开启多单
-        canShort: true, // 开启空单
-      })
-    })
-  }
+  const coins = await getCoins(allSymbols)
   if (coins.length === 0) {
     log('没有发现适合交易的币种，请等待')
     return
