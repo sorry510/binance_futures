@@ -16,7 +16,8 @@ async function getCoins(allSymbols) {
   const posiSymbols = sortSymbols.filter(item => item.percentChange > 0) // 涨的币
   const negaSymbols = sortSymbols.filter(item => item.percentChange <= 0) // 跌的币
 
-  const posiSymbolFilter = posiSymbols.reverse() // 涨的币从涨幅最高>>涨幅最低
+  const posiSymbolsReverse = posiSymbols.reverse()
+  const posiSymbolFilter = posiSymbolsReverse // 涨的币从涨幅最高>>涨幅最低
     .filter((item, key) => {
       if (key < posiSymbolsReverse.length - 1) {
         const perCha = item.percentChange - posiSymbolsReverse[key + 1].percentChange // 2个币种之间的涨幅差

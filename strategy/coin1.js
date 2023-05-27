@@ -22,7 +22,7 @@ async function getCoins(allSymbols) {
     }
   })
   
-  const coins = sortSymbols.slice(maxChaKey, 2) // 落差最大的2个币
+  const coins = sortSymbols.slice(maxChaKey, maxChaKey + 2) // 落差最大的2个币
   return coins
 }
 
