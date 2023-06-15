@@ -191,7 +191,8 @@ app.get('/pm2-log', (req, res) => {
   const { key } = req.query
   if (key === 'sorry510') {
     const result = shell.exec('pm2 log --lines 30 --nostream bian_futurees')
-    res.send(result).end()
+    const log = result.split('\n').join('<br/>')
+    res.send(log).end()
   } else {
     res.status(404).end()
   }
