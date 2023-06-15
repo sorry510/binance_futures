@@ -49,7 +49,7 @@ app.use(
     secret, // 签名的密钥 或 PublicKey
     algorithms: ['HS256'],
   }).unless({
-    path: ['/login', '/pull', webIndex], // 指定路径不经过 Token 解析
+    path: ['/login', '/pull', '/pm2-log', webIndex], // 指定路径不经过 Token 解析
   })
 )
 
@@ -59,7 +59,8 @@ app.use(function (err, req, res, next) {
     next()
   } else if (err.name === 'UnauthorizedError') {
     // res.status(401).send('invalid token...')
-    res.status(404).end()
+    // res.status(404).end()
+    res.redirect(webIndex);
   }
 })
 app.use(express.json()) // for parsing application/json
@@ -183,6 +184,17 @@ app.post('/stop', (req, res) => {
 app.post('/pull', (req, res) => {
   const result = shell.exec('git pull')
   res.json(resJson(200, result))
+})
+
+// git log 
+app.get('/pm2-log', (req, res) => {
+  const { key } = req.query
+  if (key === 'sorry510') {
+    const result = shell.exec('pm2 log --lines 30 --nostream bian_futurees')
+    res.send(result).end()
+  } else {
+    res.status(404).end()
+  }
 })
 
 // 查看前台页面
