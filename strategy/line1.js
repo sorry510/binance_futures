@@ -54,7 +54,8 @@ async function getLongOrShort(symbol) {
 
   const ma1 = await binance.getKline(symbol, '1m', 5) // 1min的kline 最近 n 条值
   const ma2 = await binance.getKline(symbol, '3m', 5) // 3min的kline 最近 n 条值
-  if (isDesc(ma1.slice(0, 4)) && isDesc(ma2.slice(0, 3)) && kdj(ma1.slice(0, 2), ma2.slice(0, 2), 'long')) { // 产生了金叉
+  if (kdj(ma1.slice(0, 2), ma2.slice(0, 2), 'long')) { // 产生了金叉
+  // if (isDesc(ma1.slice(0, 4)) && isDesc(ma2.slice(0, 3)) && kdj(ma1.slice(0, 2), ma2.slice(0, 2), 'long')) { // 产生了金叉
     // 涨的时刻
     canLong = true
     canShort = false
