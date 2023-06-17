@@ -52,10 +52,10 @@ async function getLongOrShort(symbol) {
     let canLong = false
     let canShort = false
 
-    const ma1 = await binance.getKline(symbol, '1m', 5) // 1min的kline 最近 n 条值
-    const ma2 = await binance.getKline(symbol, '3m', 5) // 3min的kline 最近 n 条值
+    const ma1 = await binance.getKline(symbol, '1m', 3) // 1min的kline 最近 n 条值
+    const ma2 = await binance.getKline(symbol, '3m', 3) // 3min的kline 最近 n 条值
     if (
-      isDesc(ma1.slice(0, 4)) &&
+      isDesc(ma1.slice(0, 3)) &&
       isDesc(ma2.slice(0, 3)) &&
       kdj(ma1.slice(0, 2), ma2.slice(0, 2), 'long')
     ) { // 产生了金叉
@@ -63,7 +63,7 @@ async function getLongOrShort(symbol) {
       canLong = true
       canShort = false
     } else if (
-      isAsc(ma1.slice(0, 4)) &&
+      isAsc(ma1.slice(0, 3)) &&
       isAsc(ma2.slice(0, 3)) &&
       kdj(ma1.slice(0, 2), ma2.slice(0, 2), 'short')
     ) {
