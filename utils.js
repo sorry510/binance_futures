@@ -104,12 +104,67 @@ async function tries(fn, max = 5, sleepTime = 1000, isThrow = false) {
   }
 }
 
+/**
+ * 是否是一个升序数组
+ * @param []<Number> arr 
+ * @returns Boolean
+ */
 function isAsc(arr) {
-  return arr.reduce(([result, last], now) => [now > last && result, now ], [true, arr[0]-1])[0]
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i-1] >= arr[i]) {
+      return false
+    }
+  }
+  return true
 }
 
+/**
+ * 是否是一个降序数组
+ * @param []<Number> arr 
+ * @returns Boolean
+ */
 function isDesc(arr) {
-  return arr.reduce(([result, last], now) => [now < last && result, now ], [true, arr[0]+1])[0]
+  for (let i = 1; i < arr.length; i++) {
+    if (arr[i-1] <= arr[i]) {
+      return false
+    }
+  }
+  return true
+}
+
+/**
+ * 是否产生金叉
+ * @param []<Number> ma1 
+ * @param []<Number> ma2 
+ * @param string type 
+ * @returns Boolean
+ */
+function kdj(ma1, ma2, type) {
+  if (type === 'long') {
+    if (ma1[0] < ma2[0]) {
+        // 最后的必须是短线在上
+        return false
+    }
+    for(let i = 1; i < ma1.length; i++) {
+        if (ma1[i] < ma2[i]) {
+            // 发生过短线在下，说明产生过金叉
+            return true
+        }
+    }
+    return false
+  } else if (type === 'short') {
+    if (ma1[0] > ma2[0]) {
+        // 最后的必须是短线在上
+        return false
+    }
+    for(let i = 1; i < ma1.length; i++) {
+      if (ma1[i] > ma2[i]) {
+          // 发生过短线在下，说明产生过金叉
+          return true
+      }
+    }
+    return false
+  }
 }
 
 module.exports = {
@@ -120,5 +175,6 @@ module.exports = {
   roundOrderQuantity,
   tries,
   isAsc,
-  isDesc
+  isDesc,
+  kdj,
 }
