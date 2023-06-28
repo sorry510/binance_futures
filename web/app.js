@@ -192,7 +192,7 @@ app.get('/pm2-log', (req, res) => {
   const result = shell.exec(`pm2 log --lines ${num} --nostream bian_futurees`)
   if (key === 'sorry510') {
     if (!json) {
-      let html = '<div id="log" style="width:100%;height=1000px;overflow:auto;">'
+      let html = '<div id="log" style="margin-left:20px;width:100%;height:900px;overflow:auto;">'
       result.split('\n').filter(item => item.trim().length).forEach(item => {
         html += `<li>${item}</li>`
       })

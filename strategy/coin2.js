@@ -7,7 +7,7 @@ const threshold = 0.75
 
 /**
  * 获取候选交易的币种
- * @param []<string> allSymbols 所有的交易币种
+ * @param []<json>(symbol, percentChange, close, lastClose, enable) allSymbols 所有的交易币种
  * @returns []<string>
  */
 async function getCoins(allSymbols) {
