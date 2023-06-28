@@ -66,7 +66,13 @@ function roundOrderPrice(price, symbol = null) {
   }
 }
 
-function roundOrderQuantity(price, quantity) {
+function roundOrderQuantity(price, quantity, symbol = null) {
+  const whiteSymbols = {
+    'UNIUSDT': 0,
+  }
+  if (whiteSymbols[symbol]) {
+    return round(quantity, whiteSymbols[symbol])
+  }
   if (price > 50) {
     return round(quantity, 2)
   } else if (price > 5) {
