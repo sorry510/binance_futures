@@ -318,6 +318,8 @@ if (config.websocket) {
             open: obj.open,
             low: obj.low,
             updateTime: obj.eventTime,
+            lastClose: knex.raw('close'), // 上一次的收盘价
+            lastUpdateTime: knex.raw('updateTime'), // 上一次更新时间
           })
         })
         log(`${obj.symbol}:${obj.percentChange}`, false)
