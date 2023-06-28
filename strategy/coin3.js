@@ -13,9 +13,10 @@ async function getCoins(allSymbols) {
   const filterSymbols = allSymbols.filter(item => item.enable == 1) // 查询所有开启的币种
     
   filterSymbols.map((item, key) => {
-    if (item.close && item.lastClose) {
-      const coinChange = Math.abs((item.close - item.lastClose) / item.close)
+    if (item.close && item.lastClose && item.updateTime && item.lastUpdateTime) {
+      const coinChange = Math.abs((item.close - item.lastClose) / item.close / (item.updateTime - item.lastUpdateTime)) // 单位时间变化率
       if (coinChange > maxChange) {
+        maxChange = coinChange
         findKey = key
       }
     }
