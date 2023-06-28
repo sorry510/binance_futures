@@ -1,18 +1,19 @@
 const binance = require('../binance')
-const { isAsc, isDesc } = require('../utils')
+const { isAsc, isDesc, kdj } = require('../utils')
 
 /**
  * 需要实现 getLongOrShort 和 canOrderComplete 方法
  * 
- * 此策略适合快速交易，极小涨幅就卖出
+ * (设计思路:大趋势会影响到小趋势，在 3m 与 5m 线发生金叉时， 1min 线买入)
  * 参考 config.js 配置
  * 
  * strategy: 'line3',
  * usdt: 10, // 交易金额 usdt
- * profit: 2, // 止盈率
- * loss: 20, // 止损率
+ * profit: 6, // 止盈率
+ * loss: 15, // 止损率
  * leverage: 10, // 合约倍数
  */
+
 
 /**
  * 是否可以创建订单
@@ -23,15 +24,22 @@ async function getLongOrShort(symbol) {
     let canLong = false
     let canShort = false
 
-    const [k1] = await binance.getKline(symbol, '1m', 1) // 1min的kline
-    const [k2] = await binance.getKline(symbol, '3m', 1) // 3min的kline
-    const [k3] = await binance.getKline(symbol, '5m', 1) // 3min的kline
-    const [k4] = await binance.getKline(symbol, '15m', 1) // 3min的kline
-    if (isDesc([k1, k2, k3, k4])) {
+    const ma1 = await binance.getKline(symbol, '1m', 2) // 1min的kline 最近 n 条值
+    const ma2 = await binance.getKline(symbol, '3m', 2) // 3min的kline 最近 n 条值
+    const ma3 = await binance.getKline(symbol, '5m', 3) // 5min的kline 最近 n 条值
+    if (
+      isDesc(ma1) &&
+      isDesc(ma2) &&
+      kdj(ma2.slice(0, 2), ma3.slice(0, 2), 'long')
+    ) { // 产生了金叉
       // 涨的时刻
       canLong = true
       canShort = false
-    } else if (isAsc([k1, k2, k3, k4])) {
+    } else if (
+      isAsc(ma1) &&
+      isAsc(ma2) &&
+      kdj(ma2.slice(0, 2), ma3.slice(0, 2), 'short')
+    ) {
       // 跌的时刻
       canLong = false
       canShort = true
@@ -54,7 +62,14 @@ async function getLongOrShort(symbol) {
  * @returns Boolean
  */
 async function canOrderComplete(symbol, side) {
-   return true
+    const [k1, k2] = await binance.getKline(symbol, '1m', 2) // 1min 线最近2条
+    if (side === 'LONG') {
+        return k1 < k2  // 价格在下跌中
+    } else if (side === 'SHORT') {
+        return k1 > k2 // 价格在上涨中
+    } else {
+        return false;
+    }
 }
 
 module.exports = {
