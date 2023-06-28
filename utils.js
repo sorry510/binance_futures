@@ -70,6 +70,7 @@ function roundOrderQuantity(price, quantity, symbol = null) {
   const whiteSymbols = {
     'UNIUSDT': 0,
     'AAVEUSDT': 1,
+    'SOLUSDT': 0,
   }
   if (whiteSymbols[symbol]) {
     return round(quantity, whiteSymbols[symbol])
