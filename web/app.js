@@ -188,11 +188,36 @@ app.post('/pull', (req, res) => {
 
 // git log 
 app.get('/pm2-log', (req, res) => {
-  const { key } = req.query
+  const { key, num = 30, json = false } = req.query
+  const result = shell.exec(`pm2 log --lines ${num} --nostream bian_futurees`)
   if (key === 'sorry510') {
-    const result = shell.exec('pm2 log --lines 30 --nostream bian_futurees')
-    const log = result.split('\n').join('<br/>')
-    res.send(log).end()
+    if (!json) {
+      let html = '<div id="log" style="width:100%;height=1000px;overflow:auto;">'
+      result.split('\n').filter(item => item.trim().length).forEach(item => {
+        html += `<li>${item}</li>`
+      })
+      html += '</div>'
+      html += `
+        <script>
+        setInterval(() => {
+          fetch("/pm2-log?key=sorry510&json=true&num=6", {
+            "body": null,
+            "method": "GET",
+          }).then(res => res.json())
+            .then(res => {
+              var lines = '<li>-------------------------------------------------------------------------</li>';
+              res.forEach(item => {
+                lines += '<li>' + item + '</li>';
+              })
+              document.querySelector('#log').innerHTML += lines;
+            })
+        }, 5000)
+        </script>`
+      res.send(html).end()
+    } else {
+      const content = result.split('\n')
+      res.json(content.slice(3).filter(item => item.trim().length))
+    }
   } else {
     res.status(404).end()
   }
