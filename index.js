@@ -2,7 +2,7 @@ const { exit } = require('process')
 const { round } = require('mathjs')
 const { sleep, log, roundOrderPrice, roundOrderQuantity, tries } = require('./utils')
 const { knex } = require('./db')
-const { usdt, profit, loss = 100, leverage, buyTimeOut, sleep_time, excludeSymbols, cha, strategy, strategyCoin } = require('./config')
+const { usdt, profit, loss = 100, leverage, buyTimeOut, sleep_time, excludeSymbols, cha, strategy, strategyCoin, maxCount = 10 } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
 const { getLongOrShort, canOrderComplete } = require(`./strategy/${strategy}`)
@@ -140,6 +140,10 @@ async function run() {
         }
       })
     )
+    if (positionFilter.length >= maxCount) {
+      log(`当前仓位数量为${positionFilter.length}达到当前仓位最大数量${maxCount}，暂时无法开启新的仓位`)
+      return
+    }
   }
   /*************************************************平仓 end************************************************************ */
 

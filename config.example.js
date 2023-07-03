@@ -10,6 +10,7 @@ module.exports = {
   buyTimeOut: 120, // 挂单购买的超时时间
   excludeSymbols: ['SANDUSDT', 'MASKUSDT', 'LUNAUSDT', 'AVAXUSDT', 'IOTXUSDT'], // 排除自动平仓的币
   cha: [0, 20], // 差值
+  maxCount: 5, // 同时开仓的最大数量
 
   dingding_token: '78e5c7c7f760235894ed34f05afe5bb5451aea5e6727eaf5c3343635d801ad5e',
   dingding_word: '报警',
