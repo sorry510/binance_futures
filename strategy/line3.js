@@ -27,7 +27,7 @@ async function getLongOrShort(symbol) {
     const ma1 = await binance.getKline(symbol, '1m', 2) // 1min的kline 最近 n 条值
     const ma2 = await binance.getKline(symbol, '3m', 2) // 3min的kline 最近 n 条值
     const ma3 = await binance.getKline(symbol, '5m', 3) // 5min的kline 最近 n 条值
-    const ma4 = await binance.getKline(symbol, '10m', 3) // 5min的kline 最近 n 条值
+    const ma4 = await binance.getKline(symbol, '15m', 3) // 5min的kline 最近 n 条值
     if (
       isDesc(ma1) &&
       isDesc(ma2) &&
