@@ -163,80 +163,107 @@ async function run() {
       const buyOrder = allOpenOrders.find(
         item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSide
       ) // 查询开多的单
-      const sellOrder = allOpenOrders.find(
-        item => item.symbol === symbol && item.side === 'SELL' && item.positionSide === positionSide
-      ) // 查询平多的单
+      // const sellOrder = allOpenOrders.find(
+      //   item => item.symbol === symbol && item.side === 'SELL' && item.positionSide === positionSide
+      // ) // 查询平多的单
       const positionLong = positions.find(item => item.symbol === symbol && item.positionSide === positionSide) // 是否有多头当前的持仓
 
       const buyOrderShort = allOpenOrders.find(
         item => item.symbol === symbol && item.side === 'SELL' && item.positionSide === positionSideShort
       ) // 查询开空的单
-      const sellOrderShort = allOpenOrders.find(
-        item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSideShort
-      ) // 查询平空的单
+      // const sellOrderShort = allOpenOrders.find(
+      //   item => item.symbol === symbol && item.side === 'BUY' && item.positionSide === positionSideShort
+      // ) // 查询平空的单
       const positionShort = positions.find(item => item.symbol === symbol && item.positionSide === positionSideShort) // 是否有空头当前的持仓
 
       if (positionLong) {
         if (positionLong.positionAmt > 0) {
-          // 有多单的持仓(不在考虑部分买入的情况，全部市价买入)
-          const { unRealizedProfit, entryPrice, positionAmt } = positionLong
-          const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率
-          const sellPrice = roundOrderPrice(entryPrice * (1 + profit / 100 / leverage), symbol) // 准备卖的挂单价格
-          const canOrder = await canOrderComplete(symbol, positionSide)
-          if (nowProfit >= profit && canOrder) {
-            // 达到止盈点，价格在下跌中，按市价卖出
-            const result = await binance.sellMarket(symbol, positionAmt, {
-              positionSide,
-            })
-            if (result.code) {
-              // 报错了
-              notify.notifySellOrderFail(symbol, result.msg)
-              await sleep(60 * 1000)
-            } else {
-              notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做多', '止赢')
-              await sleep(60 * 1000) // 止盈后暂停 1min
-            }
-            log(result)
-          } else if (nowProfit <= -loss && canOrder) {
-            // 到达止损点，价格在上涨中
-            const result = await binance.sellMarket(symbol, positionAmt, {
-              positionSide,
-            })
-            if (result.code) {
-              // 报错了
-              notify.notifySellOrderFail(symbol, result.msg)
-              await sleep(60 * 1000)
-            } else {
-              notify.notifySellOrderSuccess(
-                symbol,
-                unRealizedProfit,
-                entryPrice * (1 + nowProfit / 100 / leverage),
-                '做多',
-                '止损'
-              )
-              await sleep(60 * 1000) // 止损后暂停 1min
-            }
-            log(result)
-          } else if (nowProfit <= profit && nowProfit >= -loss) {
-            // 不在挂单，止盈全部走市价平仓
-            // 挂止盈平仓的单
-            // const result = await binance.sellLimit(symbol, positionAmt, sellPrice, {
-            //   positionSide,
-            // }) // 平仓-平多
-            // if (result.code) {
-            //   notify.notifySellOrderFail(symbol, result.msg)
-            //   await sleep(60 * 1000)
-            // } else {
-            //   notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做多', '挂单')
-            //   await sleep(10 * 1000)
-            // }
-            // log(result)
-          }
+          // 有持仓(不进行挂单处理，直接通过上面平仓逻辑处理)
+          // 有多单的持仓(不在考虑部分买入的情况)
+          // const { unRealizedProfit, entryPrice, positionAmt } = positionLong
+          // const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率
+          // const sellPrice = roundOrderPrice(entryPrice * (1 + profit / 100 / leverage), symbol) // 准备卖的挂单价格
+          // const canOrder = await canOrderComplete(symbol, positionSide)
+          // if (nowProfit >= profit && canOrder) {
+          //   // 达到止盈点，价格在下跌中，按市价卖出
+          //   const result = await binance.sellMarket(symbol, positionAmt, {
+          //     positionSide,
+          //   })
+          //   if (result.code) {
+          //     // 报错了
+          //     notify.notifySellOrderFail(symbol, result.msg)
+          //     await sleep(60 * 1000)
+          //   } else {
+          //     notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做多', '止赢')
+          //     await sleep(60 * 1000) // 止盈后暂停 1min
+          //   }
+          //   log(result)
+          // } else if (nowProfit <= -loss && canOrder) {
+          //   // 到达止损点，价格在上涨中
+          //   const result = await binance.sellMarket(symbol, positionAmt, {
+          //     positionSide,
+          //   })
+          //   if (result.code) {
+          //     // 报错了
+          //     notify.notifySellOrderFail(symbol, result.msg)
+          //     await sleep(60 * 1000)
+          //   } else {
+          //     notify.notifySellOrderSuccess(
+          //       symbol,
+          //       unRealizedProfit,
+          //       entryPrice * (1 + nowProfit / 100 / leverage),
+          //       '做多',
+          //       '止损'
+          //     )
+          //     await sleep(60 * 1000) // 止损后暂停 1min
+          //   }
+          //   log(result)
+          // } else if (nowProfit <= profit && nowProfit >= -loss) {
+          //   // 不再挂单，止盈全部走市价平仓
+          //   // 挂止盈平仓的单
+          //   // const result = await binance.sellLimit(symbol, positionAmt, sellPrice, {
+          //   //   positionSide,
+          //   // }) // 平仓-平多
+          //   // if (result.code) {
+          //   //   notify.notifySellOrderFail(symbol, result.msg)
+          //   //   await sleep(60 * 1000)
+          //   // } else {
+          //   //   notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做多', '挂单')
+          //   //   await sleep(10 * 1000)
+          //   // }
+          //   // log(result)
+          // }
         } else {
           // 没有持仓，没有挂买单
           if (!buyOrder) {
             // 允许做多
             if (canLong) {
+              // 准备做多单时，此时有当前币种的空方向持仓
+              if (positionShort) {
+                const { unRealizedProfit, entryPrice } = positionShort
+                const positionAmt = Math.abs(positionShort.positionAmt) // 空单为负数，取绝对值
+                const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
+                if (nowProfit < (-loss / 3)) { // 如果空单的收益，已经达到止损的 1/3 了，就立刻平仓，因为此时风向一变
+                  const resultBuy = await binance.buyMarket(symbol, positionAmt, {
+                    positionSide: positionSideShort,
+                  })
+                  if (resultBuy.code) {
+                    // 报错了
+                    notify.notifySellOrderFail(symbol, resultBuy.msg)
+                  } else {
+                    notify.notifySellOrderSuccess(
+                      symbol,
+                      unRealizedProfit,
+                      entryPrice * (1 - nowProfit / 100 / leverage),
+                      '平空',
+                      '反向做多单，空单止损'
+                    )
+                  }
+                  log('反向做多单，空单止损')
+                  log(resultBuy)
+                }
+              }
+              
               const { buyPrice } = await getPrice(symbol)
               if (buyOrderShort && buyPrice < buyOrderShort.entryPrice) {
                 // 如果买单价格低于买空的价格，就不再买入，直到空单平仓
@@ -280,68 +307,93 @@ async function run() {
         }
       }
 
-      if (positionShort && canShort) {
+      if (positionShort) {
         const positionAmt = Math.abs(positionShort.positionAmt) // 空单为负数，取绝对值
         if (positionAmt > 0) {
-          // 有持仓
-          const { unRealizedProfit, entryPrice } = positionShort
-          const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
-          const sellPrice = roundOrderPrice(entryPrice * (1 - profit / 100 / leverage), symbol)
-          const canOrder = await canOrderComplete(symbol, positionSideShort)
-          if (nowProfit >= profit && canOrder) {
-            // 达到止盈点，价格在上涨中，按市价卖出
-            const result = await binance.buyMarket(symbol, positionAmt, {
-              positionSide: positionSideShort,
-            })
-            if (result.code) {
-              // 报错了
-              notify.notifySellOrderFail(symbol, result.msg)
-              await sleep(60 * 1000)
-            } else {
-              notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做空', '止盈')
-              await sleep(60 * 1000)
-            }
-            log(result)
-          } else if (nowProfit < -loss && canOrder) {
-            // 达到止损点，价格在上涨中
-            const result = await binance.buyMarket(symbol, positionAmt, {
-              positionSide: positionSideShort,
-            })
-            if (result.code) {
-              // 报错了
-              notify.notifySellOrderFail(symbol, result.msg)
-              await sleep(60 * 1000)
-            } else {
-              notify.notifySellOrderSuccess(
-                symbol,
-                unRealizedProfit,
-                entryPrice * (1 - nowProfit / 100 / leverage),
-                '做空',
-                '止损'
-              )
-              await sleep(60 * 1000)
-            }
-            log('止损')
-            log(result)
-          } else if (nowProfit <= profit && nowProfit >= -loss) {
-            // 挂平仓的单
-            // const result = await binance.buyLimit(symbol, positionAmt, sellPrice, {
-            //   positionSide: positionSideShort,
-            // }) // 平仓-平空
-            // if (result.code) {
-            //   notify.notifySellOrderFail(symbol, result.msg)
-            //   await sleep(60 * 1000)
-            // } else {
-            //   notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做空', '挂单')
-            //   await sleep(10 * 1000)
-            // }
-            // log(result)
-          }
+          // 有持仓(不进行挂单处理，直接通过上面平仓逻辑处理)
+          // const { unRealizedProfit, entryPrice } = positionShort
+          // const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
+          // const sellPrice = roundOrderPrice(entryPrice * (1 - profit / 100 / leverage), symbol)
+          // const canOrder = await canOrderComplete(symbol, positionSideShort)
+          // if (nowProfit >= profit && canOrder) {
+          //   // 达到止盈点，价格在上涨中，按市价卖出
+          //   const result = await binance.buyMarket(symbol, positionAmt, {
+          //     positionSide: positionSideShort,
+          //   })
+          //   if (result.code) {
+          //     // 报错了
+          //     notify.notifySellOrderFail(symbol, result.msg)
+          //     await sleep(60 * 1000)
+          //   } else {
+          //     notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做空', '止盈')
+          //     await sleep(60 * 1000)
+          //   }
+          //   log(result)
+          // } else if (nowProfit < -loss && canOrder) {
+          //   // 达到止损点，价格在上涨中
+          //   const result = await binance.buyMarket(symbol, positionAmt, {
+          //     positionSide: positionSideShort,
+          //   })
+          //   if (result.code) {
+          //     // 报错了
+          //     notify.notifySellOrderFail(symbol, result.msg)
+          //     await sleep(60 * 1000)
+          //   } else {
+          //     notify.notifySellOrderSuccess(
+          //       symbol,
+          //       unRealizedProfit,
+          //       entryPrice * (1 - nowProfit / 100 / leverage),
+          //       '做空',
+          //       '止损'
+          //     )
+          //     await sleep(60 * 1000)
+          //   }
+          //   log('止损')
+          //   log(result)
+          // } else if (nowProfit <= profit && nowProfit >= -loss) {
+          //   // 挂平仓的单
+          //   // const result = await binance.buyLimit(symbol, positionAmt, sellPrice, {
+          //   //   positionSide: positionSideShort,
+          //   // }) // 平仓-平空
+          //   // if (result.code) {
+          //   //   notify.notifySellOrderFail(symbol, result.msg)
+          //   //   await sleep(60 * 1000)
+          //   // } else {
+          //   //   notify.notifySellOrderSuccess(symbol, unRealizedProfit, sellPrice, '做空', '挂单')
+          //   //   await sleep(10 * 1000)
+          //   // }
+          //   // log(result)
+          // }
         } else {
           // 没有持仓,没有挂买单
           if (!buyOrderShort) {
             // 允许做空
             if (canShort) {
+              // 准备做多空时，此时有当前币种的多方向持仓
+              if (positionLong) {
+                const { unRealizedProfit, entryPrice, positionAmt } = positionLong
+                const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率
+                if (nowProfit < (-loss / 3)) { // 多单的收益，已经达到止损的 1/3 了，就立刻平仓，因为此时风向一变
+                  const resultSell = await binance.sellMarket(symbol, positionAmt, {
+                    positionSide: positionSide,
+                  })
+                  if (resultSell.code) {
+                    // 报错了
+                    notify.notifySellOrderFail(symbol, resultSell.msg)
+                  } else {
+                    notify.notifySellOrderSuccess(
+                      symbol,
+                      unRealizedProfit,
+                      entryPrice * (1 + nowProfit / 100 / leverage),
+                      '平多',
+                      '反向做空单，多单止损'
+                    )
+                  }
+                  log('反向做空单，多单止损')
+                  log(resultSell)
+                }
+              }
+              
               const { sellPrice } = await getPrice(symbol)
               if (buyOrder && sellPrice > buyOrder.entryPrice) {
                 // 如果空单开除价格高于买多的价格，就不再开空单，直到买多的单平仓
