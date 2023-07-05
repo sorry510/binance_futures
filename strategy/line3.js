@@ -32,7 +32,7 @@ async function getLongOrShort(symbol) {
       isDesc(ma1) &&
       isDesc(ma2) &&
       kdj(ma1.slice(0, 2), ma2.slice(0, 2), 'long') &&
-      kdj(ma3.slice(0, 2), ma4.slice(0, 2), 'long')
+      kdj(ma3.slice(0, 2), ma4.slice(0, 2), 'short')
     ) { // 产生了金叉
       // 涨的时刻
       canLong = true
@@ -41,7 +41,7 @@ async function getLongOrShort(symbol) {
       isAsc(ma1) &&
       isAsc(ma2) &&
       kdj(ma1.slice(0, 2), ma2.slice(0, 2), 'short') &&
-      kdj(ma3.slice(0, 2), ma4.slice(0, 2), 'short')
+      kdj(ma3.slice(0, 2), ma4.slice(0, 2), 'long')
     ) {
       // 跌的时刻
       canLong = false
