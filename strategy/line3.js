@@ -24,23 +24,24 @@ async function getLongOrShort(symbol) {
     let canShort = false
 
     const kline1m = await binance.getKline(symbol, '1m', 20) // 1min的kline 最近 n 条值
-    const kline3m = await binance.getKline(symbol, '3m', 20) // 3min的kline 最近 n 条值
-    const ma1m2 = maN(kline1m, 2)
-    const ma1m10 = maN(kline1m, 10)
-    const ma3m2 = maN(kline3m, 2)
-    const ma3m10 = maN(kline3m, 10)
+    const kline15m = await binance.getKline(symbol, '15m', 21) // 3min的kline 最近 n 条值
+    const ma0 = maN(kline15m, 8)
+    const ma1 = maN(kline15m, 13)
+    const ma2 = maN(kline15m, 21)
     if (
-      isDesc(kline1m.slice(0, 3)) &&
-      ma1m2 > ma1m10 &&
-      ma3m2 > ma3m10
+      isDesc(kline1m.slice(0, 2)) &&
+      isDesc(kline15m.slice(0, 2)) &&
+      ma0 > ma1 &&
+      ma1 > ma2
     ) { // 产生了金叉
       // 涨的时刻
       canLong = true
       canShort = false
     } else if (
       isAsc(kline1m.slice(0, 2)) &&
-      ma1m2 < ma1m10 &&
-      ma3m2 < ma3m10
+      isAsc(kline15m.slice(0, 2)) &&
+      ma0 < ma1 &&
+      ma1 < ma2
     ) {
       // 跌的时刻
       canLong = false
