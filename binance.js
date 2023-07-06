@@ -95,6 +95,7 @@ async function getPrices() {
 }
 
 /**
+ * ma5 MA(5)=(收盘价1+收盘价2+收盘价3+收盘价4+收盘价5)/5
  * 获取 kline 的前n个平均值
  * @param string symbol
  * @param string type

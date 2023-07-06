@@ -175,6 +175,16 @@ function kdj(ma1, ma2, type) {
   }
 }
 
+/**
+ * ma5 MA(5)=(收盘价1+收盘价2+收盘价3+收盘价4+收盘价5)/5
+ * @param []Number kineClose 
+ * @param Number n 
+ * @returns Number
+ */
+function maN(kineClose, n) {
+  return kineClose.slice(0, n).reduce((carry, item) => carry + item, 0) / n
+}
+
 module.exports = {
   sleep,
   dateFormat,
@@ -185,4 +195,5 @@ module.exports = {
   isAsc,
   isDesc,
   kdj,
+  maN
 }
