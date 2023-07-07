@@ -2,7 +2,7 @@ const binance = require('../binance')
 const { isAsc, isDesc, kdj } = require('../utils')
 
 /**
- * 需要实现 getLongOrShort 和 canOrderComplete 方法
+ * 需要实现 getLongOrShort, canOrderComplete, autoStop 方法
  * 
  * 参考 config.js 配置
  * 
@@ -74,7 +74,18 @@ async function canOrderComplete(symbol, side) {
     }
 }
 
+/**
+ * 是否发动策略止损或止盈(无视止损点)
+ * @param {string} symbol 
+ * @param {string} side LONG:做多,SHORT:做空
+ * @returns Boolean
+ */
+async function autoStop(symbol, side) {
+  return false
+}
+
 module.exports = {
     getLongOrShort,
     canOrderComplete,
+    autoStop,
 }

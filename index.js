@@ -5,7 +5,7 @@ const { knex } = require('./db')
 const { usdt, profit, loss = 100, leverage, buyTimeOut, sleep_time, excludeSymbols, cha, strategy, strategyCoin, maxCount = 10 } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
-const { getLongOrShort, canOrderComplete } = require(`./strategy/${strategy}`)
+const { getLongOrShort, canOrderComplete, autoStop } = require(`./strategy/${strategy}`)
 const { getCoins } = require(`./strategy/${strategyCoin}`)
 
 async function getPrice(symbol) {
@@ -95,8 +95,21 @@ async function run() {
         const { unRealizedProfit, entryPrice } = posi
         const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率(正为盈利，负为亏损)
 
+        if (await autoStop(posi.symbol, posi.positionSide)) {
+          if (posi.positionSide === 'LONG') {
+            await binance.sellMarket(posi.symbol, positionAmt, {
+              positionSide: posi.positionSide,
+            })
+          }
+          // 做空时, 价格持续上涨中
+          if (posi.positionSide === 'SHORT') {
+            await binance.buyMarket(posi.symbol, positionAmt, {
+              positionSide: posi.positionSide,
+            })
+          }
+        }
         // 平仓(止损)
-        if (nowProfit <= -loss) {
+        else if (nowProfit <= -loss) {
           // 做多时，价格持续下跌中
           if (posi.positionSide === 'LONG') {
             const canOrder = await canOrderComplete(posi.symbol, 'LONG')
@@ -116,9 +129,8 @@ async function run() {
             }
           }
         }
-
         // 平仓(止盈)
-        if (nowProfit >= profit) {
+        else if (nowProfit >= profit) {
           // 做多时，价格下跌中
           if (posi.positionSide === 'LONG') {
             const canOrder = await canOrderComplete(posi.symbol, 'LONG')

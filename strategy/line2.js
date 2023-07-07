@@ -2,7 +2,7 @@ const binance = require('../binance')
 const { isAsc, isDesc } = require('../utils')
 
 /**
- * 需要实现 getLongOrShort 和 canOrderComplete 方法
+ * 需要实现 getLongOrShort, canOrderComplete, autoStop 方法
  * 
  * 此策略适合快速交易，极小涨幅就卖出
  * 参考 config.js 配置
@@ -55,7 +55,18 @@ async function canOrderComplete(symbol, side) {
    return true
 }
 
+/**
+ * 是否发动策略止损或止盈(无视止损点)
+ * @param {string} symbol 
+ * @param {string} side LONG:做多,SHORT:做空
+ * @returns Boolean
+ */
+async function autoStop(symbol, side) {
+  return false
+}
+
 module.exports = {
     getLongOrShort,
     canOrderComplete,
+    autoStop,
 }
