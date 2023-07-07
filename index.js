@@ -95,7 +95,7 @@ async function run() {
         const { unRealizedProfit, entryPrice } = posi
         const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率(正为盈利，负为亏损)
 
-        if (await autoStop(posi.symbol, posi.positionSide)) {
+        if (await autoStop(posi.symbol, posi.positionSide, nowProfit)) {
           if (posi.positionSide === 'LONG') {
             await binance.sellMarket(posi.symbol, positionAmt, {
               positionSide: posi.positionSide,

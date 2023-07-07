@@ -14,6 +14,41 @@ const { isAsc, isDesc, maN } = require('../utils')
  * leverage: 10, // 合约倍数
  */
 
+let k_1m = null
+let k_3m = null
+let k_5m = null
+let k_15m = null
+let k_30m = null
+
+async function getKlineData(symbol, type, limit = 20) {
+  if (type === '1m') {
+    if (!k_1m) {
+      k_1m = await binance.getKline(symbol, type, limit)
+    }
+    return k_1m
+  } else if (type === '3m') {
+    if (!k_3m) {
+      k_3m = await binance.getKline(symbol, type, limit)
+    }
+    return k_3m
+  } else if (type === '5m') {
+    if (!k_5m) {
+      k_5m = await binance.getKline(symbol, type, limit)
+    }
+    return k_5m
+  } else if (type === '15m') {
+    if (!k_15m) {
+      k_15m = await binance.getKline(symbol, type, limit)
+    }
+    return k_15m
+  } else if (type === '30m') {
+    if (!k_30m) {
+      k_30m = await binance.getKline(symbol, type, limit)
+    }
+    return k_30m
+  }
+}
+
 /**
  * 是否可以创建订单
  * @param {string} symbol 
@@ -27,10 +62,10 @@ async function getLongOrShort(symbol) {
     const buyCount = bids.reduce((carry, item) => Number(item[1]) + carry, 0) // 买单数量
     const sellCount = asks.reduce((carry, item) => Number(item[1]) + carry, 0) // 卖单数量
 
-    const kline_1m = await binance.getKline(symbol, '1m', 20)
-    const kline_5m = await binance.getKline(symbol, '5m', 20)
-    const kline_15m = await binance.getKline(symbol, '15m', 20)
-    const kline_30m = await binance.getKline(symbol, '30m', 20)
+    const kline_1m = await getKlineData(symbol, '1m')
+    const kline_5m = await getKlineData(symbol, '5m')
+    const kline_15m = await getKlineData(symbol, '15m')
+    const kline_30m = await getKlineData(symbol, '30m')
     
     if (
       isDesc(kline_1m.slice(0, 2)) &&
@@ -89,7 +124,36 @@ async function canOrderComplete(symbol, side) {
  * @param {string} side LONG:做多,SHORT:做空
  * @returns Boolean
  */
-async function autoStop(symbol, side) {
+async function autoStop(symbol, side, nowProfit) {
+  if (nowProfit > -2 && nowProfit < 2) {
+    // 如果过少会有交易手续费的磨损
+    return false
+  }
+  const kline_1m = await getKlineData(symbol, '1m')
+  const kline_5m = await getKlineData(symbol, '5m')
+  const kline_15m = await getKlineData(symbol, '15m')
+  const kline_30m = await getKlineData(symbol, '30m')
+  if (side === 'LONG') {
+    if (
+      isAsc(kline_1m.slice(0, 2)) &&
+      maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+      maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
+      maN(kline_15m, 3) < maN(kline_15m, 15) &&
+      maN(kline_30m, 3) > maN(kline_30m, 15)
+    ) {
+      return true
+    }
+  } else if (side === 'SHORT') {
+    if (
+      isDesc(kline_1m.slice(0, 2)) &&
+      maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+      maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
+      maN(kline_15m, 3) > maN(kline_15m, 15) &&
+      maN(kline_30m, 3) < maN(kline_30m, 15)
+    ) {
+      return true
+    }
+  }
   return false
 }
 
