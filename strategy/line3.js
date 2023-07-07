@@ -22,30 +22,31 @@ const { isAsc, isDesc, maN } = require('../utils')
 async function getLongOrShort(symbol) {
     let canLong = false
     let canShort = false
-
-    const kline1m = await binance.getKline(symbol, '1m', 20) // 1min的kline 最近 n 条值
-    const kline15m = await binance.getKline(symbol, '15m', 41) // 3min的kline 最近 n 条值
+    
     const { bids, asks } = await binance.depth(symbol, 50)
     const buyCount = bids.reduce((carry, item) => Number(item[1]) + carry, 0) // 买单数量
     const sellCount = asks.reduce((carry, item) => Number(item[1]) + carry, 0) // 卖单数量
-    const ma0 = maN(kline15m, 2)
-    const ma1 = maN(kline15m, 20)
-    const ma2 = maN(kline15m, 40)
+
+    const kline_1m = await binance.getKline(symbol, '1m', 2)
+    const kline_5m = await binance.getKline(symbol, '5m', 41)
+    const kline_15m = await binance.getKline(symbol, '15m', 41)
+    const kline_30m = await binance.getKline(symbol, '30m', 41)
+    
     if (
-      isDesc(kline1m.slice(0, 2)) &&
-      isDesc(kline15m.slice(0, 2)) &&
-      ma0 > ma1 &&
-      ma1 > ma2 &&
+      isDesc(kline_1m.slice(0, 2)) &&
+      maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
+      maN(kline_15m, 3) > maN(kline_15m, 15) &&
+      maN(kline_30m, 3) < maN(kline_30m, 15) &&
       buyCount > sellCount
     ) { // 产生了金叉
       // 涨的时刻
       canLong = true
       canShort = false
     } else if (
-      isAsc(kline1m.slice(0, 2)) &&
-      isAsc(kline15m.slice(0, 2)) &&
-      ma0 < ma1 &&
-      ma1 < ma2 &&
+      isAsc(kline_1m.slice(0, 2)) &&
+      maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
+      maN(kline_15m, 3) < maN(kline_15m, 15) &&
+      maN(kline_30m, 3) > maN(kline_30m, 15) &&
       buyCount < sellCount
     ) {
       // 跌的时刻
