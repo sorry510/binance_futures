@@ -160,5 +160,5 @@ async function autoStop(symbol, side, nowProfit) {
 module.exports = {
     getLongOrShort,
     canOrderComplete,
-    autoStop
+    autoStop,
 }
