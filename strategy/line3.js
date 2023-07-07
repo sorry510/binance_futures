@@ -72,7 +72,7 @@ async function getLongOrShort(symbol) {
       maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
       maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) > maN(kline_15m, 15) &&
-      maN(kline_30m, 3) < maN(kline_30m, 15) &&
+      maN(kline_30m, 3) < maN(kline_30m, 15) 
       // buyCount > sellCount
     ) { // 产生了金叉
       // 涨的时刻
@@ -83,7 +83,7 @@ async function getLongOrShort(symbol) {
       maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
       maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) < maN(kline_15m, 15) &&
-      maN(kline_30m, 3) > maN(kline_30m, 15) &&
+      maN(kline_30m, 3) > maN(kline_30m, 15) 
       // buyCount < sellCount
     ) {
       // 跌的时刻
