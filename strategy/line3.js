@@ -27,13 +27,14 @@ async function getLongOrShort(symbol) {
     const buyCount = bids.reduce((carry, item) => Number(item[1]) + carry, 0) // 买单数量
     const sellCount = asks.reduce((carry, item) => Number(item[1]) + carry, 0) // 卖单数量
 
-    const kline_1m = await binance.getKline(symbol, '1m', 2)
-    const kline_5m = await binance.getKline(symbol, '5m', 41)
-    const kline_15m = await binance.getKline(symbol, '15m', 41)
-    const kline_30m = await binance.getKline(symbol, '30m', 41)
+    const kline_1m = await binance.getKline(symbol, '1m', 20)
+    const kline_5m = await binance.getKline(symbol, '5m', 20)
+    const kline_15m = await binance.getKline(symbol, '15m', 20)
+    const kline_30m = await binance.getKline(symbol, '30m', 20)
     
     if (
       isDesc(kline_1m.slice(0, 2)) &&
+      maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
       maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) > maN(kline_15m, 15) &&
       maN(kline_30m, 3) < maN(kline_30m, 15) &&
@@ -44,6 +45,7 @@ async function getLongOrShort(symbol) {
       canShort = false
     } else if (
       isAsc(kline_1m.slice(0, 2)) &&
+      maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
       maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) < maN(kline_15m, 15) &&
       maN(kline_30m, 3) > maN(kline_30m, 15) &&
