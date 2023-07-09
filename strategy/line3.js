@@ -73,7 +73,7 @@ async function getLongOrShort(symbol) {
     
     if (
       isDesc(kline_1m.slice(0, 2)) &&
-      // maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+      maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
       maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) > maN(kline_15m, 15) &&
       maN(kline_30m, 3) < maN(kline_30m, 15) 
@@ -84,7 +84,7 @@ async function getLongOrShort(symbol) {
       canShort = false
     } else if (
       isAsc(kline_1m.slice(0, 2)) &&
-      // maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+      maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
       maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) < maN(kline_15m, 15) &&
       maN(kline_30m, 3) > maN(kline_30m, 15) 
@@ -129,35 +129,35 @@ async function canOrderComplete(symbol, side) {
  * @returns Boolean
  */
 async function autoStop(symbol, side, nowProfit) {
-  if (nowProfit > -2 && nowProfit < 2) {
-    // 如果过少会有交易手续费的磨损
-    return false
-  }
-  const kline_1m = await getKlineData(symbol, '1m')
-  const kline_5m = await getKlineData(symbol, '5m')
-  const kline_15m = await getKlineData(symbol, '15m')
-  const kline_30m = await getKlineData(symbol, '30m')
-  if (side === 'LONG') {
-    if (
-      isAsc(kline_1m.slice(0, 2)) &&
-      maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
-      maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
-      maN(kline_15m, 3) < maN(kline_15m, 15) &&
-      maN(kline_30m, 3) > maN(kline_30m, 15)
-    ) {
-      return true
-    }
-  } else if (side === 'SHORT') {
-    if (
-      isDesc(kline_1m.slice(0, 2)) &&
-      maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
-      maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
-      maN(kline_15m, 3) > maN(kline_15m, 15) &&
-      maN(kline_30m, 3) < maN(kline_30m, 15)
-    ) {
-      return true
-    }
-  }
+  // if (nowProfit > -2 && nowProfit < 2) {
+  //   // 如果过少会有交易手续费的磨损
+  //   return false
+  // }
+  // const kline_1m = await getKlineData(symbol, '1m')
+  // const kline_5m = await getKlineData(symbol, '5m')
+  // const kline_15m = await getKlineData(symbol, '15m')
+  // const kline_30m = await getKlineData(symbol, '30m')
+  // if (side === 'LONG') {
+  //   if (
+  //     isAsc(kline_1m.slice(0, 2)) &&
+  //     maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+  //     maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
+  //     maN(kline_15m, 3) < maN(kline_15m, 15) &&
+  //     maN(kline_30m, 3) > maN(kline_30m, 15)
+  //   ) {
+  //     return true
+  //   }
+  // } else if (side === 'SHORT') {
+  //   if (
+  //     isDesc(kline_1m.slice(0, 2)) &&
+  //     maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+  //     maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
+  //     maN(kline_15m, 3) > maN(kline_15m, 15) &&
+  //     maN(kline_30m, 3) < maN(kline_30m, 15)
+  //   ) {
+  //     return true
+  //   }
+  // }
   return false
 }
 
