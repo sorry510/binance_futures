@@ -98,16 +98,21 @@ async function run() {
         const isStop = await autoStop(posi.symbol, posi.positionSide, nowProfit)
         // const isStop = false
         if (isStop) {
+          log(`${posi.symbol}:auto_stop_start`)
           if (posi.positionSide === 'LONG') {
             await binance.sellMarket(posi.symbol, positionAmt, {
               positionSide: posi.positionSide,
             })
+            notify.notifySellOrderSuccess(posi.symbol, 0, 0, '平仓', '风向改变,自动平仓')
+            log(`${posi.symbol}:auto_stop_success`)
           }
           // 做空时, 价格持续上涨中
           if (posi.positionSide === 'SHORT') {
             await binance.buyMarket(posi.symbol, positionAmt, {
               positionSide: posi.positionSide,
             })
+            notify.notifySellOrderSuccess(posi.symbol, 0, 0, '平仓', '风向改变,自动平仓')
+            log(`${posi.symbol}:auto_stop_success`)
           }
         }
         // 平仓(止损)

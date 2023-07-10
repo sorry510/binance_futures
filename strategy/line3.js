@@ -73,7 +73,10 @@ async function getLongOrShort(symbol) {
     
     if (
       isDesc(kline_1m.slice(0, 2)) &&
-      maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+      
+      maN(kline_1m, 3) > maN(kline_1m, 5) &&
+      maN(kline_1m, 3) > maN(kline_1m, 15) &&
+      
       maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) > maN(kline_15m, 15) &&
       maN(kline_30m, 3) < maN(kline_30m, 15) 
@@ -84,7 +87,10 @@ async function getLongOrShort(symbol) {
       canShort = false
     } else if (
       isAsc(kline_1m.slice(0, 2)) &&
-      maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+      
+      maN(kline_1m, 3) < maN(kline_1m, 5) &&
+      maN(kline_1m, 3) < maN(kline_1m, 15) &&
+      
       maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) < maN(kline_15m, 15) &&
       maN(kline_30m, 3) > maN(kline_30m, 15) 
@@ -137,23 +143,30 @@ async function autoStop(symbol, side, nowProfit) {
   const kline_5m = await binance.getKline(symbol, '5m', 20)
   const kline_15m = await binance.getKline(symbol, '15m', 20)
   const kline_30m = await binance.getKline(symbol, '30m', 20)
+  
   if (side === 'LONG') {
     if (
       isAsc(kline_1m.slice(0, 2)) &&
-      maN(kline_1m, 3) < maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+      
+      maN(kline_1m, 3) < maN(kline_1m, 5) &&
+      maN(kline_1m, 3) < maN(kline_1m, 15) &&
+      
       maN(kline_5m, 3) < maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) < maN(kline_15m, 15) &&
-      maN(kline_30m, 3) > maN(kline_30m, 15)
+      maN(kline_30m, 3) > maN(kline_30m, 15) 
     ) {
       return true
     }
   } else if (side === 'SHORT') {
     if (
       isDesc(kline_1m.slice(0, 2)) &&
-      maN(kline_1m, 3) > maN(kline_1m, 5) && // 5m kline 的 3ma > 15ma
+      
+      maN(kline_1m, 3) > maN(kline_1m, 5) &&
+      maN(kline_1m, 3) > maN(kline_1m, 15) &&
+      
       maN(kline_5m, 3) > maN(kline_5m, 15) && // 5m kline 的 3ma > 15ma
       maN(kline_15m, 3) > maN(kline_15m, 15) &&
-      maN(kline_30m, 3) < maN(kline_30m, 15)
+      maN(kline_30m, 3) < maN(kline_30m, 15) 
     ) {
       return true
     }
