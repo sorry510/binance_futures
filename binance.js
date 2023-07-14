@@ -3,7 +3,7 @@ const fs = require('fs')
 const Binance = require('node-binance-api')
 const { round } = require('mathjs')
 const config = require('./config')
-const { sleep, log, dateFormat, tries } = require('./utils')
+const { sleep, log, dateFormat, tries, roundOrderPrice } = require('./utils')
 const { knex, createTableIF } = require('./db')
 
 Object.defineProperty(global, '__stack', {
@@ -92,6 +92,26 @@ async function getPosition() {
 async function getPrices() {
   const result = await binance.futuresPrices()
   return result
+}
+
+/**
+ * 当前币的挂单价格
+ */
+async function getPrice(symbol) {
+  const result = await binance.depth(symbol)
+  function avg(data) {
+    let num = 0
+    let sum = 0
+    data.map(item => {
+      sum += item[0] * item[1]
+      num += Number(item[1])
+    })
+    return num > 0 ? sum / num : 0
+  }
+  return {
+    buyPrice: roundOrderPrice(avg(result.bids), symbol), // 平均买单价格(低)
+    sellPrice: roundOrderPrice(avg(result.asks), symbol), // 平均卖单价格(高)
+  }
 }
 
 /**
@@ -337,6 +357,7 @@ module.exports = {
   getBalance,
   getPosition,
   // getPrices,
+  getPrice,
   getKlineAvg,
   getKline,
   buyLimit,
