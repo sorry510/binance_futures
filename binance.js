@@ -97,8 +97,8 @@ async function getPrices() {
 /**
  * 当前币的挂单价格
  */
-async function getPrice(symbol) {
-  const result = await binance.depth(symbol)
+async function getPrice(symbol, limit = 50) {
+  const result = await binance.futuresDepth(symbol, { limit })
   function avg(data) {
     let num = 0
     let sum = 0
