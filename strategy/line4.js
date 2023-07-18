@@ -1,5 +1,5 @@
 const binance = require('../binance')
-const { isAsc, isDesc, maN } = require('../utils')
+const { isAsc, isDesc, maN, kdj } = require('../utils')
 
 /**
  * 需要实现 getLongOrShort, canOrderComplete, autoStop 方法
@@ -34,10 +34,12 @@ async function getLongOrShort(symbol) {
       isDesc(kline_1m.slice(0, 2)) &&
       
       maN(kline_1m, 3) > maN(kline_1m, 15) &&
+      maN(kline_1m.slice(1), 3) < maN(kline_1m.slice(1), 15) && // 一次 3 和 15 的金叉
+      
       maN(kline_1m, 3) > maN(kline_1m, 30) &&
       maN(kline_1m, 15) < maN(kline_1m, 30) && // 大跌的转折，刚开始上涨，所以 15 < 30
       
-      isDesc(kline_5m.slice(0, 3)) &&
+      isDesc(kline_5m.slice(0, 2)) &&
       ( // 大于其中一个
         (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
         ||
@@ -45,15 +47,12 @@ async function getLongOrShort(symbol) {
       ) &&
       
       isDesc(kline_15m.slice(0, 2)) &&
+      maN(kline_15m, 3) > maN(kline_15m, 20) &&
+      
       isAsc(kline_30m.slice(0, 2)) &&
-      (
-        (maN(kline_30m, 3) > maN(kline_30m, 30) && maN(kline_15m, 3) > maN(kline_15m, 30))
-        ||
-        (maN(kline_30m, 3) < maN(kline_30m, 30) && maN(kline_15m, 3) < maN(kline_15m, 30))
-      ) &&
+      maN(kline_30m, 3) < maN(kline_30m, 20) &&
       
       maN(kline_1d, 3) > buyPrice // 支撑位
-      // buyCount > sellCount
     ) { // 产生了金叉
       // 涨的时刻
       canLong = true
@@ -62,26 +61,25 @@ async function getLongOrShort(symbol) {
       isAsc(kline_1m.slice(0, 2)) &&
       
       maN(kline_1m, 3) < maN(kline_1m, 15) &&
+      maN(kline_1m.slice(1), 3) > maN(kline_1m.slice(1), 15) && // 一次 3 和 15 的死叉
+      
       maN(kline_1m, 3) < maN(kline_1m, 30) &&
-      maN(kline_1m, 15) > maN(kline_1m, 30) && // 大跌的转折，刚开始上涨，所以 15 < 30
+      maN(kline_1m, 15) > maN(kline_1m, 30) &&
       
       isAsc(kline_5m.slice(0, 3)) &&
       ( // 大于其中一个
-        (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
-        ||
         (maN(kline_5m, 3) < maN(kline_5m, 15) && maN(kline_5m, 3) > maN(kline_5m, 30))
+        ||
+        (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
       ) &&
       
       isAsc(kline_15m.slice(0, 2)) &&
+      maN(kline_15m, 3) < maN(kline_15m, 20) &&
+      
       isDesc(kline_30m.slice(0, 2)) &&
-      (
-        (maN(kline_30m, 3) > maN(kline_30m, 30) && maN(kline_15m, 3) > maN(kline_15m, 30))
-        ||
-        (maN(kline_30m, 3) < maN(kline_30m, 30) && maN(kline_15m, 3) < maN(kline_15m, 30))
-      ) &&
+      maN(kline_30m, 3) > maN(kline_30m, 20) &&
       
       maN(kline_1d, 3) < buyPrice // 支撑位
-      // buyCount < sellCount
     ) {
       // 跌的时刻
       canLong = false
