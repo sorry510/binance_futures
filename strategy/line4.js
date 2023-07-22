@@ -40,11 +40,11 @@ async function getLongOrShort(symbol) {
       maN(kline_1m, 15) < maN(kline_1m, 30) && // 大跌的转折，刚开始上涨，所以 15 < 30
       
       isDesc(kline_5m.slice(0, 2)) &&
-      ( // 大于其中一个
-        (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
-        ||
-        (maN(kline_5m, 3) < maN(kline_5m, 15) && maN(kline_5m, 3) > maN(kline_5m, 30))
-      ) &&
+      // ( // 大于其中一个
+      //   (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
+      //   ||
+      //   (maN(kline_5m, 3) < maN(kline_5m, 15) && maN(kline_5m, 3) > maN(kline_5m, 30))
+      // ) &&
       
       isDesc(kline_15m.slice(0, 2)) &&
       maN(kline_15m, 3) > maN(kline_15m, 20) &&
@@ -66,12 +66,12 @@ async function getLongOrShort(symbol) {
       maN(kline_1m, 3) < maN(kline_1m, 30) &&
       maN(kline_1m, 15) > maN(kline_1m, 30) &&
       
-      isAsc(kline_5m.slice(0, 3)) &&
-      ( // 大于其中一个
-        (maN(kline_5m, 3) < maN(kline_5m, 15) && maN(kline_5m, 3) > maN(kline_5m, 30))
-        ||
-        (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
-      ) &&
+      isAsc(kline_5m.slice(0, 2)) &&
+      // ( // 大于其中一个
+      //   (maN(kline_5m, 3) < maN(kline_5m, 15) && maN(kline_5m, 3) > maN(kline_5m, 30))
+      //   ||
+      //   (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
+      // ) &&
       
       isAsc(kline_15m.slice(0, 2)) &&
       maN(kline_15m, 3) < maN(kline_15m, 20) &&
