@@ -1,17 +1,17 @@
 const binance = require('../binance')
-const { isAsc, isDesc, maN, kdj } = require('../utils')
+const { isAsc, isDesc, maN, maNList } = require('../utils')
 
 /**
  * 需要实现 getLongOrShort, canOrderComplete, autoStop 方法
  * 
- * 看小时长线，降低交易频率，提高止盈率
+ * 实现思路为 ma 条形图的转折点
  * 参考 config.js 配置
  * 
  * strategy: 'line5',
- * usdt: 10, // 交易金额 usdt
+ * usdt: 7, // 交易金额 usdt
  * profit: 20, // 止盈率
- * loss: 20, // 止损率
- * leverage: 10, // 合约倍数
+ * loss: 60, // 止损率
+ * leverage: 15, // 合约倍数
  */
 
 /**
@@ -23,63 +23,28 @@ async function getLongOrShort(symbol) {
     let canLong = false
     let canShort = false
     
-    const { buyPrice } = await binance.getPrice(symbol)
-    const kline_1m = await binance.getKline(symbol, '1m', 40)
-    const kline_5m = await binance.getKline(symbol, '5m', 40)
-    const kline_15m = await binance.getKline(symbol, '15m', 40)
-    const kline_30m = await binance.getKline(symbol, '30m', 40)
-    const kline_1d = await binance.getKline(symbol, '1d', 40) 
+    const kline_3m = await binance.getKlineOrigin(symbol, '3m', 40)
+    const kline_5m = await binance.getKlineOrigin(symbol, '5m', 40)
+    const kline_15m = await binance.getKlineOrigin(symbol, '15m', 30)
+    
+    const line3m_result = normalizationLineData(kline_3m)
+    const line5m_result = normalizationLineData(kline_5m)
+    const line15m_result = normalizationLineData(kline_15m, 0)
     
     if (
-      isDesc(kline_1m.slice(0, 2)) &&
-      
-      maN(kline_1m, 3) > maN(kline_1m, 15) &&
-      maN(kline_1m.slice(1), 3) < maN(kline_1m.slice(1), 15) && // 一次 3 和 15 的金叉
-      
-      maN(kline_1m, 3) > maN(kline_1m, 30) &&
-      maN(kline_1m, 15) < maN(kline_1m, 30) && // 大跌的转折，刚开始上涨，所以 15 < 30
-      
-      isDesc(kline_5m.slice(0, 2)) &&
-      ( // 大于其中一个
-        (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
-        ||
-        (maN(kline_5m, 3) < maN(kline_5m, 15) && maN(kline_5m, 3) > maN(kline_5m, 30))
-      ) &&
-      
-      isDesc(kline_15m.slice(0, 2)) &&
-      maN(kline_15m, 3) > maN(kline_15m, 20) &&
-      
-      isAsc(kline_30m.slice(0, 2)) &&
-      maN(kline_30m, 3) < maN(kline_30m, 20) &&
-      
-      maN(kline_1d, 3) > buyPrice // 支撑位
-    ) { // 产生了金叉
+      checkLongLine3m(line3m_result) &&
+      checkLongLine5m(line5m_result) &&
+      checkLongLine15m(line15m_result) &&
+      true
+    ) {
       // 涨的时刻
       canLong = true
       canShort = false
     } else if (
-      isAsc(kline_1m.slice(0, 2)) &&
-      
-      maN(kline_1m, 3) < maN(kline_1m, 15) &&
-      maN(kline_1m.slice(1), 3) > maN(kline_1m.slice(1), 15) && // 一次 3 和 15 的死叉
-      
-      maN(kline_1m, 3) < maN(kline_1m, 30) &&
-      maN(kline_1m, 15) > maN(kline_1m, 30) &&
-      
-      isAsc(kline_5m.slice(0, 3)) &&
-      ( // 大于其中一个
-        (maN(kline_5m, 3) < maN(kline_5m, 15) && maN(kline_5m, 3) > maN(kline_5m, 30))
-        ||
-        (maN(kline_5m, 3) > maN(kline_5m, 15) && maN(kline_5m, 3) < maN(kline_5m, 30))
-      ) &&
-      
-      isAsc(kline_15m.slice(0, 2)) &&
-      maN(kline_15m, 3) < maN(kline_15m, 20) &&
-      
-      isDesc(kline_30m.slice(0, 2)) &&
-      maN(kline_30m, 3) > maN(kline_30m, 20) &&
-      
-      maN(kline_1d, 3) < buyPrice // 支撑位
+      checkShortLine3m(line3m_result) &&
+      checkShortLine5m(line5m_result) &&
+      checkShortLine15m(line15m_result) &&
+      true
     ) {
       // 跌的时刻
       canLong = false
@@ -90,9 +55,9 @@ async function getLongOrShort(symbol) {
     }
 
     return {
-        canLong,
-        canShort,
-        // other: {},
+      canLong,
+      canShort,
+      // other: {},
     }
 }
 
@@ -103,14 +68,14 @@ async function getLongOrShort(symbol) {
  * @returns Boolean
  */
 async function canOrderComplete(symbol, side) {
-    const [k1, k2] = await binance.getKline(symbol, '1m', 2) // 1min 线最近2条
-    if (side === 'LONG') {
-        return k1 < k2  // 价格在下跌中
-    } else if (side === 'SHORT') {
-        return k1 > k2 // 价格在上涨中
-    } else {
-        return false;
-    }
+  const [k1, k2] = await binance.getKline(symbol, '1m', 2) // 1min 线最近2条
+  if (side === 'LONG') {
+    return k1 < k2  // 价格在下跌中
+  } else if (side === 'SHORT') {
+    return k1 > k2 // 价格在上涨中
+  } else {
+    return false;
+  }
 }
 
 /**
@@ -127,8 +92,134 @@ async function autoStop(symbol, side, nowProfit) {
   return false
 }
 
+function normalizationLineData(data, slice = 1) {
+  let maxIndex = 0
+  let maxPrice = 0
+  let minIndex = 0
+  let minPrice = 0
+  const result = data.slice(slice).map((item, key) => {
+    const open = Number(item[1])
+    const max = Number(item[2])
+    const min = Number(item[3])
+    const close = Number(item[4])
+    const tradeCount = Number(item[5])
+    if (key === 0) {
+      maxPrice = max
+      minPrice = min
+    } else {
+      if (max > maxPrice) {
+        maxPrice = max
+        maxIndex = key
+      }
+      if (min < minPrice) {
+        minPrice = min
+        minIndex = key
+      }
+    }
+    return {
+      position: close >= open ? 'long' : 'short',
+      max,
+      min,
+      close,
+      open,
+      tradeCount,
+    }
+  })
+  return {
+    maxIndex,
+    minIndex,
+    line: result
+  }
+}
+
+function checkLongLine3m(data) {
+  const { maxIndex, minIndex, line } = data
+  if (minIndex <= 2 && minIndex >= 10) {
+    // 刚开始转折时，不下注，转折时间过长时不下注
+    return false
+  } else {
+    const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
+    if (
+      isDesc(ma3List.slice(0, minIndex)) && // 最近 ma 在上涨
+      isAsc(ma3List.slice(minIndex, minIndex + 10)) && // 之前 ma 在下跌
+      line.slice(0, minIndex).filter(item => item.position === 'long').length >= minIndex - 2 && //
+      true // 占位
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+function checkShortLine3m(data) {
+  const { maxIndex, minIndex, line } = data
+  if (maxIndex <= 2 && maxIndex >= 10) {
+    // 刚开始转折时，不下注，转折时间过长时不下注
+    return false
+  } else {
+    const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
+    if (
+      isAsc(ma3List.slice(0, maxIndex)) &&
+      isDesc(ma3List.slice(maxIndex, maxIndex + 10)) && 
+      line.slice(0, maxIndex).filter(item => item.position === 'long').length >= maxIndex - 2 &&
+      true // 占位
+    ) {
+      return true
+    }
+  }
+  return false
+}
+
+function checkLongLine5m(data) {
+  const { maxIndex, minIndex, line } = data
+  const maList = maNList(line.map(item => item.close), 5, 20) // 3min kline 最近20条，不包含最近3min
+  if (
+    isDesc(maList.slice(0, 3)) && // 最近 ma 在上涨
+    true
+  ) {
+    return true
+  }
+  return false
+}
+
+function checkShortLine5m(data) {
+  const { maxIndex, minIndex, line } = data
+  const maList = maNList(line.map(item => item.close), 5, 20) // 3min kline 最近20条，不包含最近3min
+  if (
+    isAsc(maList.slice(0, 3)) && 
+    true
+  ) {
+    return true
+  }
+  return false
+}
+
+function checkLongLine15m(data) {
+  const { maxIndex, minIndex, line } = data
+  const maList = maNList(line.map(item => item.close), 15, 20)
+  if (
+    isDesc(maList.slice(0, 2)) && // 最近 ma 在上涨
+    true
+  ) {
+    return true
+  }
+  return false
+}
+
+function checkShortLine15m(data) {
+  const { maxIndex, minIndex, line } = data
+  const maList = maNList(line.map(item => item.close), 15, 20)
+  if (
+    isAsc(maList.slice(0, 2)) && // 最近 ma 在上涨
+    true
+  ) {
+    return true
+  }
+  return false
+}
+
 module.exports = {
-    getLongOrShort,
-    canOrderComplete,
-    autoStop,
+  getLongOrShort,
+  canOrderComplete,
+  autoStop,
 }

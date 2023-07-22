@@ -177,12 +177,27 @@ function kdj(ma1, ma2, type) {
 
 /**
  * ma5 MA(5)=(收盘价1+收盘价2+收盘价3+收盘价4+收盘价5)/5
- * @param []Number kineClose 
+ * @param []Number klineClose 
  * @param Number n 
  * @returns Number
  */
-function maN(kineClose, n) {
-  return kineClose.slice(0, n).reduce((carry, item) => carry + item, 0) / n
+function maN(klineClose, n) {
+  return klineClose.slice(0, n).reduce((carry, item) => carry + item, 0) / n
+}
+
+/**
+ * ma 的 n 条数据
+ * @param {*} klineClose 
+ * @param {*} n n kline
+ * @param {*} 多条数数据
+ * @returns 
+ */
+function maNList(klineClose, n, count = 20) {
+  const result = []
+  for (let i = 0; i < count; i++) {
+    result.push(maN(klineClose.slice(i), n))
+  }
+  return result
 }
 
 module.exports = {
@@ -195,5 +210,6 @@ module.exports = {
   isAsc,
   isDesc,
   kdj,
-  maN
+  maN,
+  maNList,
 }

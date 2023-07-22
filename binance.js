@@ -152,6 +152,7 @@ async function getKline(symbol, type, limit) {
  */
 async function getKlineOrigin(symbol, type, limit) {
   let result = await binance.futuresCandles(symbol, type, { limit })
+  result = result.reverse()
   return result
 }
 
