@@ -136,11 +136,22 @@ async function getKlineAvg(symbol, type, keys) {
  * 获取 kline 收盘价
  * @param {*} symbol 
  * @param {*} type 
- * @param {*} nums 
  */
 async function getKline(symbol, type, limit) {
   let result = await binance.futuresCandles(symbol, type, { limit })
   result = result.map(item => Number(item[4])).reverse() // 获取最新到以前的收盘价
+  return result
+}
+
+/**
+ * 获取 kline 原始数据
+ * @param {*} symbol 
+ * @param {*} type 
+ * @result
+ * @doc file://./doc/kline.js
+ */
+async function getKlineOrigin(symbol, type, limit) {
+  let result = await binance.futuresCandles(symbol, type, { limit })
   return result
 }
 
@@ -360,6 +371,7 @@ module.exports = {
   getPrice,
   getKlineAvg,
   getKline,
+  getKlineOrigin,
   buyLimit,
   sellLimit,
   buyMarket,
