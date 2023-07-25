@@ -132,15 +132,13 @@ function normalizationLineData(data, slice = 1) {
 
 function checkLongLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (minIndex <= 2 && minIndex >= 10) {
-    // 刚开始转折时，不下注，转折时间过长时不下注
-    return false
-  } else {
+  if (minIndex >= 2 && maxIndex >= 10) {
+    // 最低点在9分前，最高点之前30分
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     if (
       isDesc(ma3List.slice(0, minIndex)) && // 最近 ma 在上涨
       isAsc(ma3List.slice(minIndex, minIndex + 10)) && // 之前 ma 在下跌
-      line.slice(0, minIndex).filter(item => item.position === 'long').length >= minIndex - 2 && //
+      line.slice(0, minIndex).filter(item => item.position === 'long').length >= minIndex - 1 && //
       true // 占位
     ) {
       return true
@@ -151,15 +149,12 @@ function checkLongLine3m(data) {
 
 function checkShortLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (maxIndex <= 2 && maxIndex >= 10) {
-    // 刚开始转折时，不下注，转折时间过长时不下注
-    return false
-  } else {
+  if (maxIndex >= 2 && minIndex <= 10) {
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     if (
       isAsc(ma3List.slice(0, maxIndex)) &&
       isDesc(ma3List.slice(maxIndex, maxIndex + 10)) && 
-      line.slice(0, maxIndex).filter(item => item.position === 'long').length >= maxIndex - 2 &&
+      line.slice(0, maxIndex).filter(item => item.position === 'short').length >= maxIndex - 1 &&
       true // 占位
     ) {
       return true
