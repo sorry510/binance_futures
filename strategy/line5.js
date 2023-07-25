@@ -1,4 +1,5 @@
 const binance = require('../binance')
+const { profit, loss = 100} = require('../config')
 const { isAsc, isDesc, maN, maNList } = require('../utils')
 
 /**
@@ -83,9 +84,33 @@ async function canOrderComplete(symbol, side) {
  * @returns Boolean
  */
 async function autoStop(symbol, side, nowProfit) {
-  if (nowProfit > -2 && nowProfit < 2) {
+  if (nowProfit > -3 && nowProfit < 3) {
     // 如果过少会有交易手续费的磨损
     return false
+  }
+  if (side === 'LONG') {
+    if ((nowProfit < profit * 0.6 && nowProfit > 0) || nowProfit < -profit) {
+      const kline_3m = await binance.getKlineOrigin(symbol, '3m', 40)
+      const line3m_result = normalizationLineData(kline_3m, 0)
+      const { maxIndex, minIndex, line } = line3m_result
+      const ma3List = maNList(line.map(item => item.close), 3, 20)
+      if (isAsc(ma3List.slice(0, 5)) && maxIndex >= 5) {
+        // 连续5次下跌，切最高点在5之前
+        return true
+      }
+    }
+  }
+  if (side === 'SHORT') {
+    if ((nowProfit < profit * 0.6 && nowProfit > 0) || nowProfit < -profit) {
+      const kline_3m = await binance.getKlineOrigin(symbol, '3m', 40)
+      const line3m_result = normalizationLineData(kline_3m, 0)
+      const { maxIndex, minIndex, line } = line3m_result
+      const ma3List = maNList(line.map(item => item.close), 3, 20)
+      if (isAsc(ma3List.slice(0, 5)) && minIndex >= 5) {
+        // 连续5次上涨，切最低点在5之前
+        return true
+      }
+    }
   }
   return false
 }

@@ -5,7 +5,7 @@ const { getLongOrShort, canOrderComplete, autoStop } = require(`../strategy/${st
 ;(async () => {
   const allSymbols = await knex('symbols')
   for ( { symbol } of allSymbols) {
-    // const stop = await autoStop()
+    // const stop = await autoStop(symbol, 'LONG', -14)
     // console.log(stop)
     const { canLong, canShort } = await getLongOrShort(symbol)
     console.log(symbol, canLong, canShort)
