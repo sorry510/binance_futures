@@ -97,7 +97,7 @@ async function autoStop(symbol, side, nowProfit) {
       const lineCount = 5
       if (
         isAsc(ma3List.slice(1, lineCount)) &&
-        line.slice(1, lineCount).filter(item => item.position === 'short').length === lineCount &&
+        line.slice(1, lineCount).filter(item => item.position === 'short').length === lineCount - 1 &&
         maxIndex > lineCount
       ) {
         // 连续5次下跌，切最高点在5之前
@@ -113,8 +113,8 @@ async function autoStop(symbol, side, nowProfit) {
       const ma3List = maNList(line.map(item => item.close), 3, 20)
       const lineCount = 5
       if (
-        isAsc(ma3List.slice(1, lineCount)) &&
-        line.slice(1, lineCount).filter(item => item.position === 'long').length === lineCount &&
+        isDesc(ma3List.slice(1, lineCount)) &&
+        line.slice(1, lineCount).filter(item => item.position === 'long').length === lineCount - 1 &&
         minIndex >= lineCount
       ) {
         // 连续5次上涨，切最低点在5之前
