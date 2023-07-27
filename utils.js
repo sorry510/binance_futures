@@ -68,10 +68,11 @@ function roundOrderPrice(price, symbol = null) {
 
 function roundOrderQuantity(price, quantity, symbol = null) {
   const whiteSymbols = {
-    'UNIUSDT': 3,
-    'AAVEUSDT': 2,
-    'SOLUSDT': 3,
-    'AXSUSDT': 3,
+    'UNIUSDT': 1,
+    'AAVEUSDT': 1,
+    'AVAXUSDT': 1,
+    'SOLUSDT': 1,
+    'AXSUSDT': 1,
   }
   if (whiteSymbols[symbol]) {
     return round(quantity, whiteSymbols[symbol])
