@@ -308,19 +308,19 @@ async function run() {
             }
           } else {
             // 有挂单，检查是否超时，超时取消挂单
-            const nowTime = +new Date()
-            if (nowTime > Number(buyOrder.updateTime) + buyTimeOut * 1000) {
-              const result = await binance.cancelOrder(symbol, buyOrder.orderId) // 撤销订单
-              if (result.code) {
-                notify.notifyCancelOrderFail(symbol, result.msg)
-                await sleep(20 * 1000)
-              } else {
-                notify.notifyCancelOrderSuccess(symbol)
-                await sleep(20 * 1000)
-              }
-              log('撤销订单')
-              log(result)
-            }
+            // const nowTime = +new Date()
+            // if (nowTime > Number(buyOrder.updateTime) + buyTimeOut * 1000) {
+            //   const result = await binance.cancelOrder(symbol, buyOrder.orderId) // 撤销订单
+            //   if (result.code) {
+            //     notify.notifyCancelOrderFail(symbol, result.msg)
+            //     await sleep(20 * 1000)
+            //   } else {
+            //     notify.notifyCancelOrderSuccess(symbol)
+            //     await sleep(20 * 1000)
+            //   }
+            //   log('撤销订单')
+            //   log(result)
+            // }
           }
         }
       }
@@ -438,19 +438,19 @@ async function run() {
             }
           } else {
             // 有挂单，检查是否超时，超时取消挂单
-            const nowTime = +new Date()
-            if (nowTime > Number(buyOrderShort.updateTime) + buyTimeOut * 1000) {
-              const result = await binance.cancelOrder(symbol, buyOrderShort.orderId) // 撤销订单
-              if (result.code) {
-                notify.notifyCancelOrderFail(symbol, result.msg)
-                await sleep(20 * 1000)
-              } else {
-                notify.notifyCancelOrderSuccess(symbol)
-                await sleep(20 * 1000)
-              }
-              log('撤销订单')
-              log(result)
-            }
+            // const nowTime = +new Date()
+            // if (nowTime > Number(buyOrderShort.updateTime) + buyTimeOut * 1000) {
+            //   const result = await binance.cancelOrder(symbol, buyOrderShort.orderId) // 撤销订单
+            //   if (result.code) {
+            //     notify.notifyCancelOrderFail(symbol, result.msg)
+            //     await sleep(20 * 1000)
+            //   } else {
+            //     notify.notifyCancelOrderSuccess(symbol)
+            //     await sleep(20 * 1000)
+            //   }
+            //   log('撤销订单')
+            //   log(result)
+            // }
           }
         }
       }
