@@ -94,7 +94,7 @@ async function autoStop(symbol, side, nowProfit) {
       const line3m_result = normalizationLineData(kline_3m, 0)
       const { maxIndex, minIndex, line } = line3m_result
       const ma3List = maNList(line.map(item => item.close), 3, 20)
-      const lineCount = 5
+      const lineCount = 6
       if (
         isAsc(ma3List.slice(1, lineCount)) &&
         line.slice(1, lineCount).filter(item => item.position === 'short').length === lineCount - 1 &&
@@ -111,7 +111,7 @@ async function autoStop(symbol, side, nowProfit) {
       const line3m_result = normalizationLineData(kline_3m, 0)
       const { maxIndex, minIndex, line } = line3m_result
       const ma3List = maNList(line.map(item => item.close), 3, 20)
-      const lineCount = 5
+      const lineCount = 6
       if (
         isDesc(ma3List.slice(1, lineCount)) &&
         line.slice(1, lineCount).filter(item => item.position === 'long').length === lineCount - 1 &&
