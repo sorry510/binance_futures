@@ -201,6 +201,16 @@ function maNList(klineClose, n, count = 20) {
   return result
 }
 
+/**
+ * 返回 min（包含）～ max（不包含）之间的数字
+ * @param {*} min 
+ * @param {*} max 
+ * @returns 
+ */
+function getRndInteger(min, max) {
+  return Math.floor(Math.random() * (max - min) ) + min;
+}
+
 module.exports = {
   sleep,
   dateFormat,
@@ -213,4 +223,5 @@ module.exports = {
   kdj,
   maN,
   maNList,
+  getRndInteger,
 }
