@@ -94,7 +94,12 @@ async function autoStop(symbol, side, nowProfit) {
       const line3m_result = normalizationLineData(kline_3m, 0)
       const { maxIndex, minIndex, line } = line3m_result
       const ma3List = maNList(line.map(item => item.close), 3, 20)
-      if (isAsc(ma3List.slice(0, 5)) && maxIndex >= 5) {
+      const lineCount = 5
+      if (
+        isAsc(ma3List.slice(1, lineCount)) &&
+        line.slice(1, lineCount).filter(item => item.position === 'short').length === lineCount &&
+        maxIndex > lineCount
+      ) {
         // 连续5次下跌，切最高点在5之前
         return true
       }
@@ -106,7 +111,12 @@ async function autoStop(symbol, side, nowProfit) {
       const line3m_result = normalizationLineData(kline_3m, 0)
       const { maxIndex, minIndex, line } = line3m_result
       const ma3List = maNList(line.map(item => item.close), 3, 20)
-      if (isAsc(ma3List.slice(0, 5)) && minIndex >= 5) {
+      const lineCount = 5
+      if (
+        isAsc(ma3List.slice(1, lineCount)) &&
+        line.slice(1, lineCount).filter(item => item.position === 'long').length === lineCount &&
+        minIndex >= lineCount
+      ) {
         // 连续5次上涨，切最低点在5之前
         return true
       }
