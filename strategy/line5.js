@@ -35,7 +35,8 @@ async function getLongOrShort(symbol) {
     if (
       checkLongLine3m(line3m_result) &&
       checkLongLine5m(line5m_result) &&
-      checkLongLine15m(line15m_result)
+      // checkLongLine15m(line15m_result) &&
+      true
     ) {
       // 涨的时刻
       canLong = true
@@ -43,7 +44,8 @@ async function getLongOrShort(symbol) {
     } else if (
       checkShortLine3m(line3m_result) &&
       checkShortLine5m(line5m_result) &&
-      checkShortLine15m(line15m_result)
+      // checkShortLine15m(line15m_result) &&
+      true
     ) {
       // 跌的时刻
       canLong = false
