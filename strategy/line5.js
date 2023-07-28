@@ -29,8 +29,8 @@ async function getLongOrShort(symbol) {
     const kline_15m = await binance.getKlineOrigin(symbol, '15m', 30)
     
     const line3m_result = normalizationLineData(kline_3m)
-    const line5m_result = normalizationLineData(kline_5m, 0)
-    const line15m_result = normalizationLineData(kline_15m, 0)
+    const line5m_result = normalizationLineData(kline_5m)
+    const line15m_result = normalizationLineData(kline_15m)
     
     if (
       checkLongLine3m(line3m_result) &&
@@ -167,7 +167,7 @@ function normalizationLineData(data, slice = 1) {
 
 function checkLongLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (minIndex >= 2 && maxIndex >= 9) {
+  if (minIndex >= 2 && minIndex <= 4 && maxIndex >= 9) {
     // 最低点在9分前，最高点之前30分
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     if (
@@ -184,7 +184,7 @@ function checkLongLine3m(data) {
 
 function checkShortLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (maxIndex >= 2 && minIndex <= 9) {
+  if (maxIndex >= 2 && maxIndex <= 4 && minIndex <= 9) {
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     if (
       isAsc(ma3List.slice(0, maxIndex)) &&
@@ -200,9 +200,9 @@ function checkShortLine3m(data) {
 
 function checkLongLine5m(data) {
   const { maxIndex, minIndex, line } = data
-  const maList = maNList(line.map(item => item.close), 5, 20) // 3min kline 最近20条，不包含最近3min
+  const maList = maNList(line.map(item => item.close), 5, 20)
   if (
-    isDesc(maList.slice(0, 3)) && // 最近 ma 在上涨
+    isAsc(maList.slice(2, 4)) &&
     true
   ) {
     return true
@@ -212,9 +212,9 @@ function checkLongLine5m(data) {
 
 function checkShortLine5m(data) {
   const { maxIndex, minIndex, line } = data
-  const maList = maNList(line.map(item => item.close), 5, 20) // 3min kline 最近20条，不包含最近3min
+  const maList = maNList(line.map(item => item.close), 5, 20)
   if (
-    isAsc(maList.slice(0, 3)) && 
+    isDesc(maList.slice(2, 4)) && 
     true
   ) {
     return true
@@ -226,7 +226,7 @@ function checkLongLine15m(data) {
   const { maxIndex, minIndex, line } = data
   const maList = maNList(line.map(item => item.close), 15, 20)
   if (
-    isDesc(maList.slice(0, 2)) && // 最近 ma 在上涨
+    line[1].position === 'short' &&
     true
   ) {
     return true
@@ -238,7 +238,7 @@ function checkShortLine15m(data) {
   const { maxIndex, minIndex, line } = data
   const maList = maNList(line.map(item => item.close), 15, 20)
   if (
-    isAsc(maList.slice(0, 2)) && // 最近 ma 在上涨
+    line[1].position === 'long' &&
     true
   ) {
     return true
