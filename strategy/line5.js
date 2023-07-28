@@ -29,7 +29,7 @@ async function getLongOrShort(symbol) {
     const kline_15m = await binance.getKlineOrigin(symbol, '15m', 30)
     
     const line3m_result = normalizationLineData(kline_3m)
-    const line5m_result = normalizationLineData(kline_5m)
+    const line5m_result = normalizationLineData(kline_5m, 0)
     const line15m_result = normalizationLineData(kline_15m, 0)
     
     if (
@@ -167,12 +167,12 @@ function normalizationLineData(data, slice = 1) {
 
 function checkLongLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (minIndex >= 2 && maxIndex >= 10) {
+  if (minIndex >= 2 && maxIndex >= 9) {
     // 最低点在9分前，最高点之前30分
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     if (
       isDesc(ma3List.slice(0, minIndex)) && // 最近 ma 在上涨
-      isAsc(ma3List.slice(minIndex, minIndex + 10)) && // 之前 ma 在下跌
+      isAsc(ma3List.slice(minIndex, minIndex + 7)) && // 之前 ma 在下跌
       line.slice(0, minIndex).filter(item => item.position === 'long').length >= minIndex - 1 && //
       true // 占位
     ) {
@@ -184,11 +184,11 @@ function checkLongLine3m(data) {
 
 function checkShortLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (maxIndex >= 2 && minIndex <= 10) {
+  if (maxIndex >= 2 && minIndex <= 9) {
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     if (
       isAsc(ma3List.slice(0, maxIndex)) &&
-      isDesc(ma3List.slice(maxIndex, maxIndex + 10)) && 
+      isDesc(ma3List.slice(maxIndex, maxIndex + 7)) && 
       line.slice(0, maxIndex).filter(item => item.position === 'short').length >= maxIndex - 1 &&
       true // 占位
     ) {
