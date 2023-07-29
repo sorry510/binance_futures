@@ -34,7 +34,7 @@ async function getLongOrShort(symbol) {
     
     if (
       checkLongLine3m(line3m_result) &&
-      checkLongLine5m(line5m_result) &&
+      // checkLongLine5m(line5m_result) &&
       // checkLongLine15m(line15m_result) &&
       true
     ) {
@@ -43,7 +43,7 @@ async function getLongOrShort(symbol) {
       canShort = false
     } else if (
       checkShortLine3m(line3m_result) &&
-      checkShortLine5m(line5m_result) &&
+      // checkShortLine5m(line5m_result) &&
       // checkShortLine15m(line15m_result) &&
       true
     ) {
@@ -169,13 +169,16 @@ function normalizationLineData(data, slice = 1) {
 
 function checkLongLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (minIndex >= 2 && minIndex <= 4 && maxIndex >= 9) {
+  if (minIndex >= 2 && minIndex <= 4 && maxIndex >= 10) {
     // 最低点在9分前，最高点之前30分
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
+    const linePoint = line[minIndex]
     if (
       isDesc(ma3List.slice(0, minIndex)) && // 最近 ma 在上涨
-      isAsc(ma3List.slice(minIndex, minIndex + 7)) && // 之前 ma 在下跌
-      line.slice(0, minIndex).filter(item => item.position === 'long').length >= minIndex - 1 && //
+      isAsc(ma3List.slice(minIndex, minIndex + 8)) && // 之前 ma 在下跌
+      linePoint.position === 'short' &&
+      Math.abs(linePoint.close - linePoint.min) > Math.abs(linePoint.open - linePoint.close) &&
+      // line.slice(0, minIndex).filter(item => item.position === 'long').length >= minIndex - 1 && //
       true // 占位
     ) {
       return true
@@ -186,12 +189,15 @@ function checkLongLine3m(data) {
 
 function checkShortLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (maxIndex >= 2 && maxIndex <= 4 && minIndex <= 9) {
+  if (maxIndex >= 2 && maxIndex <= 4 && minIndex <= 10) {
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
+    const linePoint = line[maxIndex]
     if (
       isAsc(ma3List.slice(0, maxIndex)) &&
-      isDesc(ma3List.slice(maxIndex, maxIndex + 7)) && 
-      line.slice(0, maxIndex).filter(item => item.position === 'short').length >= maxIndex - 1 &&
+      isDesc(ma3List.slice(maxIndex, maxIndex + 8)) &&
+      linePoint.position === 'long' &&
+      Math.abs(linePoint.max - linePoint.close) > Math.abs(linePoint.close - linePoint.open) &&
+      // line.slice(0, maxIndex).filter(item => item.position === 'short').length >= maxIndex - 1 &&
       true // 占位
     ) {
       return true
