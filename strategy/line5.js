@@ -169,7 +169,7 @@ function normalizationLineData(data, slice = 1) {
 
 function checkLongLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (minIndex >= 2 && minIndex <= 4 && maxIndex >= 10) {
+  if (minIndex >= 1 && minIndex <= 3 && maxIndex >= 10) {
     // 最低点在9分前，最高点之前30分
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     const linePoint = line[minIndex]
@@ -189,7 +189,7 @@ function checkLongLine3m(data) {
 
 function checkShortLine3m(data) {
   const { maxIndex, minIndex, line } = data
-  if (maxIndex >= 2 && maxIndex <= 4 && minIndex <= 10) {
+  if (maxIndex >= 1 && maxIndex <= 3 && minIndex <= 10) {
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     const linePoint = line[maxIndex]
     if (
