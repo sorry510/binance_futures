@@ -15,16 +15,21 @@ async function getCoins(allSymbols) {
     .map(item => ({ ...item, percentChange: Number(item.percentChange) }))
     .sort((a, b) => (a.percentChange < b.percentChange ? -1 : 1)) // 涨幅从小到大排序
   
-  const randIntStart = getRndInteger(0, Math.min(5, sortSymbols.length))
+  const rand1 = getRndInteger(0, Math.min(8, sortSymbols.length))
+  const rand2 = getRndInteger(0, Math.min(8, sortSymbols.length))
+  const rand3 = getRndInteger(Math.max(sortSymbols.length - 8, 0), sortSymbols.length)
+  const rand4 = getRndInteger(Math.max(sortSymbols.length - 8, 0), sortSymbols.length)
+  
   const midInt = parseInt(sortSymbols.length/ 2)
-  const randIntEnd = getRndInteger(Math.max(sortSymbols.length - 5, 0), sortSymbols.length)
   
   const set = new Set()
-  set.add(randIntStart)
+  set.add(rand1)
+  set.add(rand2)
+  set.add(rand3)
+  set.add(rand4)
   set.add(midInt)
-  set.add(randIntEnd)
   
-  const coins = [] // 变化最大的1个币
+  const coins = []
   set.forEach(item => {
     coins.push(sortSymbols[item])
   })
