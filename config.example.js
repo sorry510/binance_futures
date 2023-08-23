@@ -3,34 +3,34 @@ module.exports = {
   api_secret: '',
   log: true, // 日志输出
 
-  usdt: 20, // 交易金额 usdt
-  profit: 3, // 止盈率
-  loss: 6, // 止损率
-  leverage: 10, // 合约倍数
+  usdt: 10, // 交易金额 usdt
+  profit: 10, // 止盈率
+  loss: 10, // 止损率
+  leverage: 15, // 合约倍数
   buyTimeOut: 120, // 挂单购买的超时时间
-  excludeSymbols: ['SANDUSDT', 'MASKUSDT', 'LUNAUSDT', 'AVAXUSDT', 'IOTXUSDT'], // 排除自动平仓的币
-  cha: [0, 20], // 差值
+  excludeSymbols: ['SANDUSDT'], // 排除自动平仓的币
+  cha: [0, 20], // 差值(废弃)
   maxCount: 5, // 同时开仓的最大数量
-  allowLong: true,
-  allowShort: true,
+  allowLong: true, // 允许做多
+  allowShort: true, // 允许做空
 
-  dingding_token: '78e5c7c7f760235894ed34f05afe5bb5451aea5e6727eaf5c3343635d801ad5e',
+  dingding_token: '',
   dingding_word: '报警',
 
   sleep_time: 1, // 轮训时间
-  websocket: true, // 更新币种信息
-  strategy: 'line1', // 交易策略
-  strategyCoin: 'coin1', // 选币策略
+  websocket: true, // 自动更新币种信息, 使用时必须为 true
+  strategy: 'line5', // 交易策略
+  strategyCoin: 'coin5', // 选币策略
 
   web: {
-    secret: '323',
+    secret: 'mdzxy2139527',
     port: 2222,
     username: 'admin',
-    password: '',
+    password: 'admin',
     enterPoint: '/',
     command: {
-      start: 'pm2 start all',
-      stop: 'pm2 stop all',
+      start: 'pm2 start xxx',
+      stop: 'pm2 stop xxx',
     },
   },
 }

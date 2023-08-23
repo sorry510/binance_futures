@@ -1,28 +1,62 @@
-## 币安合约自动开多单和空单
-- 默认数据库所有的币种都是关闭状态
-- 自动选取所有开启的币种，找到涨幅最大的币和跌幅最大的币，如果 2/3 都是涨，只对涨幅最大币做多，如果 2/3 都是跌，最对跌幅最大币做空，其它双向做空和跌
-- 在做多或做空之前，再次对所选币种的 3min的kline 2日线 与 20日线, 做比较只有 2日线 > 20日线时可以做多，反之才可以做空
-- 一旦买入之后，当达到 profit 就进行交割，或达到 loss 也进行交割
-- 缺点: 一旦方向发生一致性变化，必然最后一单会亏损
+## 币安合约自动交易
+- 自动交易
+- 交易策略看 strategy 目录源码
 
+## image
+![交易币种](./img/coins.jpg)
+![交易配置](./img/config.jpg)
+
+## dingding push
+![钉钉推送1](./img/dingding.jpeg)
 
 ### install
 ```
 pnpm install
 ```
 
+### config
+> 申请api_key地址: [币安API管理页面](https://www.binance.com/cn/usercenter/settings/api-management)
+
+```
+cp config.js.example config.js // 需自行修改交易配置
+cp data/data.db.example data/data.db // 创建数据库
+```
+
 ### start
 
-- init
 ```
-node binance.js // 初始化数据库,运行 10 秒后手动停止
-```
-
-- run
-```
-node index.js // 开启服务
-node web/app.js // 开启前端管理界面
+node index.js // 开启后台服务
+node web/app.js // 开启前端管理界面(只用来管理交易的币种和交易配置)
 ```
 
-### 修改交易策略
-> 仿照
+#### web 说明
+>访问地址: http://ip:port # ip 为部署服务器ip，port 为 config.js 中 web.port
+登录的账号密码为 config.js 文件中的  web.username 和 web.password
+
+#### 交易列表按钮说明
+##### 开启服务
+> 对应的是 config.js 中 web.command.start 下的命令，需要自行配置
+
+##### 关闭服务
+> 对应的是 config.js 中 web.command.stop 下的命令，需要自行配置
+
+##### 开启所有
+> 开启所有币种
+
+##### 停用所有
+> 停用所有币种 
+
+### 注意事项
+- 由于币安交易所的 api 在大陆无法访问，请使用国外的服务器
+- 请保证账户里有足够的 bnb 用于交易手续费
+- 请保证现货账户有足够的 USDT
+- 钉钉推送 1min 中内不要超过 20 条，否则会被封 ip
+
+### 交易策略
+> 参考 strategy 目录，默认了 5 种
+> coin.js 用来选币，需要实现 getCoins 方法，通过 config.js 的 strategy 进行配置
+> line.js 用来买卖，需要实现 getLongOrShort, canOrderComplete, autoStop 方法，，通过 config.js 的 strategyCoin 进行配置
+
+### 免责申明
+>！！！本项目不构成任何投资建议，投资者应独立决策并自行承担风险！！！
+！！！币圈有风险，入圈须谨慎。！！！
