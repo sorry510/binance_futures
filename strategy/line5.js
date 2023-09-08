@@ -93,7 +93,7 @@ async function autoStop(position, nowProfit) {
     const updateTime = position.updateTime // 交易成功时的时间(毫秒)
     const nowTime = +new Date() // 当前时间(毫秒)
     const millisecond = holdMaxTime * 60 * 1000
-    if (updateTime + millisecond > nowTime) {
+    if (updateTime + millisecond < nowTime) {
       log(`${symbol}: 持仓时间超过最大设置，将进行卖出操作`)
       return true
     }
