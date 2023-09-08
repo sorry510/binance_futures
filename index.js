@@ -102,7 +102,7 @@ async function run() {
             await binance.sellMarket(posi.symbol, positionAmt, {
               positionSide: posi.positionSide,
             })
-            notify.notifySellOrderSuccess(posi.symbol, 0, 0, '平仓', '风向改变,自动平仓')
+            notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '风向改变,自动平仓')
             log(`${posi.symbol}:auto_stop_success`)
           }
           // 做空时, 价格持续上涨中
@@ -110,7 +110,7 @@ async function run() {
             await binance.buyMarket(posi.symbol, positionAmt, {
               positionSide: posi.positionSide,
             })
-            notify.notifySellOrderSuccess(posi.symbol, 0, 0, '平仓', '风向改变,自动平仓')
+            notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '风向改变,自动平仓')
             log(`${posi.symbol}:auto_stop_success`)
           }
         }
