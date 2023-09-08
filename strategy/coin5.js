@@ -1,4 +1,5 @@
 const { getRndInteger } = require('../utils')
+const binance = require('../binance')
 
 /**
  * 需要实现 getCoins 方法
@@ -10,7 +11,11 @@ const { getRndInteger } = require('../utils')
  * @returns []<string>
  */
 async function getCoins(allSymbols) {
-  const filterSymbols = allSymbols.filter(item => item.enable == 1) // 查询所有开启的币种
+  const nowTime = +new Date() // 当前时间(毫秒)
+  const recentOrders = await binance.getOrders(null, { startTime: nowTime - 3 * 60 * 1000} ) // 最近 3 min 交易过的产品，不再进行交易
+  const recentSymbolsMap = new Set(recentOrders.map(item => item.symbol))
+  
+  const filterSymbols = allSymbols.filter(item => item.enable == 1 && !recentSymbolsMap.has(item.symbol)) // 查询所有开启的币种
   const sortSymbols = filterSymbols
     .map(item => ({ ...item, percentChange: Number(item.percentChange) }))
     .sort((a, b) => (a.percentChange < b.percentChange ? -1 : 1)) // 涨幅从小到大排序
