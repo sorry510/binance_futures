@@ -281,11 +281,11 @@ async function marginType(symbol, marginType = 'ISOLATED') {
 }
 
 /**
- * 获取order
+ * 获取历史订单
  * @param string symbol
- * @doc https://binance-docs.github.io/apidocs/futures/cn/#trade-10
+ * @doc https://binance-docs.github.io/apidocs/futures/cn/#user_data-7
  */
-async function getOrder(symbol, params = {}) {
+async function getOrders(symbol = null, params = {}) {
   const result = await binance.futuresAllOrders(symbol, params)
   return result
 }
@@ -382,7 +382,7 @@ module.exports = {
   depth,
   leverage,
   marginType,
-  // getOrder,
+  getOrders,
   getOpenOrder,
   // getExchangeInfo,
   // getTrades,
