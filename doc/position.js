@@ -12,7 +12,7 @@ const data = [
     maxNotional: '250000', // 当前杠杆下用户可用的最大名义价值
     positionSide: 'BOTH', // 持仓方向
     positionAmt: '0', // 持仓数量
-    updateTime: 0, // 更新时间
+    updateTime: 0, // 更新时间(订单交易成功时的时间，毫秒时间戳)
   },
   {
     symbol: 'XTZUSDT',

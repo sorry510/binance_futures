@@ -95,7 +95,7 @@ async function run() {
         const { unRealizedProfit, entryPrice } = posi
         const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率(正为盈利，负为亏损)
 
-        const isStop = await autoStop(posi.symbol, posi.positionSide, nowProfit)
+        const isStop = await autoStop(posi, nowProfit)
         if (isStop) {
           log(`${posi.symbol}:auto_stop_start`)
           if (posi.positionSide === 'LONG') {

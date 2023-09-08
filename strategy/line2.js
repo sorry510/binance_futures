@@ -57,11 +57,10 @@ async function canOrderComplete(symbol, side) {
 
 /**
  * 是否发动策略止损或止盈(无视止损点)
- * @param {string} symbol 
- * @param {string} side LONG:做多,SHORT:做空
+ * @param position @doc file://./doc/position.js
  * @returns Boolean
  */
-async function autoStop(symbol, side) {
+async function autoStop(position, nowProfit) {
   return false
 }
 

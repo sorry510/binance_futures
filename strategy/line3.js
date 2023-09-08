@@ -130,11 +130,12 @@ async function canOrderComplete(symbol, side) {
 
 /**
  * 是否发动策略止损或止盈(无视止损点)
- * @param {string} symbol 
- * @param {string} side LONG:做多,SHORT:做空
+ * @param position @doc file://./doc/position.js
  * @returns Boolean
  */
-async function autoStop(symbol, side, nowProfit) {
+async function autoStop(position, nowProfit) {
+  const symbol = position.symbol
+  const side = position.positionSide
   if (nowProfit > -2 && nowProfit < 2) {
     // 如果过少会有交易手续费的磨损
     return false

@@ -1,6 +1,6 @@
 const binance = require('../binance')
-const { profit, loss = 100} = require('../config')
-const { isAsc, isDesc, maN, maNList } = require('../utils')
+const { profit, loss = 100, holdMaxTime } = require('../config')
+const { isAsc, isDesc, maN, maNList, log } = require('../utils')
 
 /**
  * 需要实现 getLongOrShort, canOrderComplete, autoStop 方法
@@ -81,11 +81,24 @@ async function canOrderComplete(symbol, side) {
 
 /**
  * 是否发动策略止损或止盈(无视止损点)
- * @param {string} symbol 
- * @param {string} side LONG:做多,SHORT:做空
+ * @param position @doc file://./doc/position.js
  * @returns Boolean
  */
-async function autoStop(symbol, side, nowProfit) {
+async function autoStop(position, nowProfit) {
+  const symbol = position.symbol
+  const side = position.positionSide
+  
+  if (holdMaxTime) {
+    // 最大持仓时间
+    const updateTime = position.updateTime // 交易成功时的时间(毫秒)
+    const nowTime = +new Date() // 当前时间(毫秒)
+    const millisecond = holdMaxTime * 60 * 1000
+    if (updateTime + millisecond > nowTime) {
+      log(`${symbol}: 持仓时间超过最大设置，将进行卖出操作`)
+      return true
+    }
+  }
+  
   if (nowProfit > -3 && nowProfit < 3) {
     // 如果过少会有交易手续费的磨损
     return false

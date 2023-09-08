@@ -13,6 +13,7 @@ module.exports = {
   maxCount: 5, // 同时开仓的最大数量
   allowLong: true, // 允许做多
   allowShort: true, // 允许做空
+  holdMaxTime: 60 * 24 * 30, // 持仓的最长时间, 分钟级别, 默认30天
 
   dingding_token: '',
   dingding_word: '报警',
