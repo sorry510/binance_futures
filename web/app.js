@@ -79,7 +79,7 @@ app.post('/login', (req, res) => {
         },
         secret,
         {
-          expiresIn: 3600 * 24 * 7, // 过期时间
+          expiresIn: 3600 * 24 * 30, // 1个月过期
         }
       )
     res.json(
