@@ -123,6 +123,7 @@ async function run() {
               await binance.sellMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
+              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '止损,自动平仓')
             }
           }
           // 做空时, 价格持续上涨中
@@ -132,6 +133,7 @@ async function run() {
               await binance.buyMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
+              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '止损,自动平仓')
             }
           }
         }
@@ -144,6 +146,7 @@ async function run() {
               await binance.sellMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
+              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '止盈,自动平仓')
             }
           }
           // 做空时, 价格上涨中
@@ -153,6 +156,7 @@ async function run() {
               await binance.buyMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
+              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '止盈,自动平仓')
             }
           }
         }
