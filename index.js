@@ -1,4 +1,5 @@
 const { exit } = require('process')
+const fs = require('fs')
 const { round } = require('mathjs')
 const { sleep, log, roundOrderPrice, roundOrderQuantity, tries } = require('./utils')
 const { knex } = require('./db')
@@ -33,10 +34,6 @@ async function run() {
     exit()
   }
   const coins = await getCoins(allSymbols)
-  if (coins.length === 0) {
-    log('没有发现适合交易的币种，请等待')
-    return
-  }
   /************************************************寻找交易币种 end******************************************************************* */
 
   /************************************************获取账户信息 start******************************************************************* */
@@ -99,18 +96,38 @@ async function run() {
         if (isStop) {
           log(`${posi.symbol}:auto_stop_start`)
           if (posi.positionSide === 'LONG') {
-            await binance.sellMarket(posi.symbol, positionAmt, {
+            const result = await binance.sellMarket(posi.symbol, positionAmt, {
               positionSide: posi.positionSide,
             })
-            notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '风向改变,自动平仓')
+            const price = result ? result.avgPrice : 0
+            await tries(async () => await knex('order').insert({
+              symbol: posi.symbol,
+              amount: positionAmt,
+              avg_price: price,
+              inexact_profit: unRealizedProfit,
+              positionSide: posi.positionSide,
+              side: 'close',
+              updateTime: +new Date(),
+            }))
+            notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, price, '平仓', '风向改变,自动平仓')
             log(`${posi.symbol}:auto_stop_success`)
           }
           // 做空时, 价格持续上涨中
           if (posi.positionSide === 'SHORT') {
-            await binance.buyMarket(posi.symbol, positionAmt, {
+            const result = await binance.buyMarket(posi.symbol, positionAmt, {
               positionSide: posi.positionSide,
             })
-            notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '风向改变,自动平仓')
+            const price = result ? result.avgPrice : 0
+            await tries(async () => await knex('order').insert({
+              symbol: posi.symbol,
+              amount: positionAmt,
+              avg_price: price,
+              inexact_profit: unRealizedProfit,
+              positionSide: posi.positionSide,
+              side: 'close',
+              updateTime: +new Date(),
+            }))
+            notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, price, '平仓', '风向改变,自动平仓')
             log(`${posi.symbol}:auto_stop_success`)
           }
         }
@@ -120,20 +137,40 @@ async function run() {
           if (posi.positionSide === 'LONG') {
             const canOrder = await canOrderComplete(posi.symbol, 'LONG')
             if (canOrder) {
-              await binance.sellMarket(posi.symbol, positionAmt, {
+              const result = await binance.sellMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
-              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '止损,自动平仓')
+              const price = result ? result.avgPrice : 0
+              await tries(async () => await knex('order').insert({
+                symbol: posi.symbol,
+                amount: positionAmt,
+                avg_price: price,
+                inexact_profit: unRealizedProfit,
+                positionSide: posi.positionSide,
+                side: 'close',
+                updateTime: +new Date(),
+              }))
+              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, price, '平仓', '止损,自动平仓')
             }
           }
           // 做空时, 价格持续上涨中
           if (posi.positionSide === 'SHORT') {
             const canOrder = await canOrderComplete(posi.symbol, 'SHORT')
             if (canOrder) {
-              await binance.buyMarket(posi.symbol, positionAmt, {
+              const result = await binance.buyMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
-              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '止损,自动平仓')
+              const price = result ? result.avgPrice : 0
+              await tries(async () => await knex('order').insert({
+                symbol: posi.symbol,
+                amount: positionAmt,
+                avg_price: price,
+                inexact_profit: unRealizedProfit,
+                positionSide: posi.positionSide,
+                side: 'close',
+                updateTime: +new Date(),
+              }))
+              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, price, '平仓', '止损,自动平仓')
             }
           }
         }
@@ -143,20 +180,40 @@ async function run() {
           if (posi.positionSide === 'LONG') {
             const canOrder = await canOrderComplete(posi.symbol, 'LONG')
             if (canOrder) {
-              await binance.sellMarket(posi.symbol, positionAmt, {
+              const result = await binance.sellMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
-              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '止盈,自动平仓')
+              const price = result ? result.avgPrice : 0
+              await tries(async () => await knex('order').insert({
+                symbol: posi.symbol,
+                amount: positionAmt,
+                avg_price: price,
+                inexact_profit: unRealizedProfit,
+                positionSide: posi.positionSide,
+                side: 'close',
+                updateTime: +new Date(),
+              }))
+              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, price, '平仓', '止盈,自动平仓')
             }
           }
           // 做空时, 价格上涨中
           if (posi.positionSide === 'SHORT') {
             const canOrder = await canOrderComplete(posi.symbol, 'SHORT')
             if (canOrder) {
-              await binance.buyMarket(posi.symbol, positionAmt, {
+              const result = await binance.buyMarket(posi.symbol, positionAmt, {
                 positionSide: posi.positionSide,
               })
-              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, 0, '平仓', '止盈,自动平仓')
+              const price = result ? result.avgPrice : 0
+              await tries(async () => await knex('order').insert({
+                symbol: posi.symbol,
+                amount: positionAmt,
+                avg_price: price,
+                inexact_profit: unRealizedProfit,
+                positionSide: posi.positionSide,
+                side: 'close',
+                updateTime: +new Date(),
+              }))
+              notify.notifySellOrderSuccess(posi.symbol, unRealizedProfit, price, '平仓', '止盈,自动平仓')
             }
           }
         }
@@ -273,10 +330,20 @@ async function run() {
                     // 报错了
                     notify.notifySellOrderFail(symbol, resultBuy.msg)
                   } else {
+                    const price = resultBuy ? resultBuy.avgPrice : 0
+                    await tries(async () => await knex('order').insert({
+                      symbol: symbol,
+                      amount: positionAmt,
+                      avg_price: price,
+                      inexact_profit: unRealizedProfit,
+                      positionSide: positionSideShort,
+                      side: 'close',
+                      updateTime: +new Date(),
+                    }))
                     notify.notifySellOrderSuccess(
                       symbol,
                       unRealizedProfit,
-                      entryPrice * (1 - nowProfit / 100 / leverage),
+                      price,
                       '平空',
                       '反向做多单，空单止损'
                     )
@@ -304,6 +371,16 @@ async function run() {
                 notify.notifyBuyOrderFail(symbol, result.msg)
                 await sleep(20 * 1000)
               } else {
+                const price = result ? result.avgPrice : 0
+                await tries(async () => await knex('order').insert({
+                  symbol: symbol,
+                  amount: quantity,
+                  avg_price: price,
+                  // inexact_profit: 0,
+                  positionSide: positionSide,
+                  side: 'open',
+                  updateTime: +new Date(),
+                }))
                 notify.notifyBuyOrderSuccess(symbol, quantity, buyPrice)
                 await sleep(20 * 1000)
               }
@@ -403,6 +480,16 @@ async function run() {
                     // 报错了
                     notify.notifySellOrderFail(symbol, resultSell.msg)
                   } else {
+                    const price = resultSell ? resultSell.avgPrice : 0
+                    await tries(async () => await knex('order').insert({
+                      symbol: symbol,
+                      amount: positionAmt,
+                      avg_price: price,
+                      inexact_profit: unRealizedProfit,
+                      positionSide: positionSide,
+                      side: 'close',
+                      updateTime: +new Date(),
+                    }))
                     notify.notifySellOrderSuccess(
                       symbol,
                       unRealizedProfit,
@@ -434,6 +521,16 @@ async function run() {
                 notify.notifyBuyOrderFail(symbol, result2.msg)
                 await sleep(20 * 1000)
               } else {
+                const price = result2 ? result2.avgPrice : 0
+                await tries(async () => await knex('order').insert({
+                  symbol: symbol,
+                  amount: quantity,
+                  avg_price: price,
+                  // inexact_profit: 0,
+                  positionSide: positionSideShort,
+                  side: 'open',
+                  updateTime: +new Date(),
+                }))
                 notify.notifyBuyOrderSuccess(symbol, quantity, sellPrice, '做空')
                 await sleep(20 * 1000) // 开单成功后，暂停30秒中
                 log(`开仓-开空:${symbol},quantity:${quantity},price:${sellPrice}`)
@@ -463,7 +560,21 @@ async function run() {
   /*************************************************开始交易挂单与平仓 end************************************************************ */
 }
 
+function checkDb() {
+  const dbFile = './data/data.db'
+  if (!fs.existsSync(dbFile)) {
+    console.log(`
+not found db in ${dbFile}, 
+please run command 'cp data/data.db.example data/data.db'
+    `)
+    process.exit()
+  }
+}
+
+
 ;(async () => {
+  checkDb()
+  
   log('database sync start')
   await sleep(5 * 1000)
   log('database sync success')
