@@ -49,7 +49,7 @@ app.use(
     secret, // 签名的密钥 或 PublicKey
     algorithms: ['HS256'],
   }).unless({
-    path: ['/login', '/pull', '/pm2-log', webIndex], // 指定路径不经过 Token 解析
+    path: ['/login', '/pull', '/pm2-log', '/pm2-log2', webIndex], // 指定路径不经过 Token 解析
   })
 )
 
