@@ -9,7 +9,7 @@ const { exit } = require('process')
 
 const { knex } = require('../db')
 const { web } = require('../config.js')
-const { resJson } = require('./utils')
+const { resJson, dateFormat } = require('./utils')
 const { tries } = require('../utils')
 const currentDir = path.dirname(__filename)
 const webIndex = web.enterPoint || '/'
@@ -166,6 +166,44 @@ app.put('/config', (req, res) => {
   fs.writeFileSync(path.resolve(currentDir, '../config.js'), code)
   const result = shell.exec(web.command.start) // 重启服务
   res.json(resJson(200, result))
+})
+
+// 交易订单
+app.get('/orders', async (req, res) => {
+  const {
+    query: { 
+      sort = '+',
+      symbol,
+      page = 1,
+      limit = 10,
+    },
+  } = req
+  const orders = await tries(async () => {
+    const query = knex('order').orderBy('updateTime', 'desc')
+    
+    if (symbol) {
+      query.where('symbol', 'like', `%${symbol.toUpperCase()}%`)
+    }
+    
+    const total = await query.clone().count({count: '*'})
+    const result = await query.clone().offset((page - 1) * limit).limit(limit)
+    const list = result.map(item => {
+      const sideText = item.side === 'open' ? '开仓' : '平仓'
+      const positionText = item.positionSide = 'LONG' ? '做多' : '做空'
+      const updateDate = dateFormat(item.updateTime)
+      return {
+        ...item,
+        sideText,
+        positionText,
+        updateDate,
+      }
+    })
+    return {
+      total: total[0].count,
+      list,
+    }
+  })
+  res.json(resJson(200, orders))
 })
 
 // 开启
