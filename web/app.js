@@ -188,39 +188,17 @@ app.post('/pull', (req, res) => {
 
 // git log 
 app.get('/pm2-log', (req, res) => {
-  const { key, num = 30, json = false } = req.query
-  const result = shell.exec(`pm2 log --lines ${num} --nostream bian_futurees`)
-  if (key === 'sorry510') {
-    if (!json) {
-      let html = '<div id="log" style="margin-left:20px;width:100%;height:900px;overflow:auto;">'
-      result.split('\n').filter(item => item.trim().length).forEach(item => {
-        html += `<li>${item}</li>`
-      })
-      html += '</div>'
-      html += `
-        <script>
-        setInterval(() => {
-          fetch("/pm2-log?key=sorry510&json=true&num=6", {
-            "body": null,
-            "method": "GET",
-          }).then(res => res.json())
-            .then(res => {
-              var lines = '<li>-------------------------------------------------------------------------</li>';
-              res.forEach(item => {
-                lines += '<li>' + item + '</li>';
-              })
-              document.querySelector('#log').innerHTML += lines;
-            })
-        }, 5000)
-        </script>`
-      res.send(html).end()
-    } else {
-      const content = result.split('\n')
-      res.json(content.slice(3).filter(item => item.trim().length))
-    }
-  } else {
+  const { key } = req.query
+  if (key !== 'sorry510') {
     res.status(404).end()
   }
+  const result = shell.exec(web.command.log, { async: true, silent: true });
+  result.stdout.on('data', (data) => {
+    res.write(data.toString())
+  })
+  result.stderr.on('data', (data) => {
+    res.write(data.toString())
+  });
 })
 
 // 查看前台页面
