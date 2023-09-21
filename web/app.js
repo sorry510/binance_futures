@@ -226,10 +226,13 @@ app.post('/pull', (req, res) => {
 
 // git log 
 app.get('/pm2-log', (req, res) => {
+  
   const { key } = req.query
   if (key !== 'sorry510') {
     res.status(404).end()
   }
+  
+  res.set('Content-Type', 'text/plain; charset=utf-8');
   const result = shell.exec(web.command.log, { async: true, silent: true });
   result.stdout.on('data', (data) => {
     res.write(data.toString())

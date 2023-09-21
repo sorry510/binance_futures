@@ -32,6 +32,7 @@ module.exports = {
     command: {
       start: 'pm2 start xxx',
       stop: 'pm2 stop xxx',
+      log: 'pm2 log xxx',
     },
   },
 }
