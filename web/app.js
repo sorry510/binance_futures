@@ -256,7 +256,7 @@ app.get('/pm2-log2', (req, res) => {
       html += `
         <script>
         setInterval(() => {
-          fetch("/pm2-log?key=sorry510&json=true&num=6", {
+          fetch("/pm2-log2?key=sorry510&json=true&num=6", {
             "body": null,
             "method": "GET",
           }).then(res => res.json())
