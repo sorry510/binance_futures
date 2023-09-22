@@ -184,7 +184,7 @@ function kdj(ma1, ma2, type) {
  * @returns Number
  */
 function maN(klineClose, n) {
-  return klineClose.slice(0, n).reduce((carry, item) => carry + item, 0) / n
+  return klineClose.slice(0, n).reduce((carry, item) => carry + Number(item), 0) / n
 }
 
 /**

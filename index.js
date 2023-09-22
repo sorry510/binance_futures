@@ -318,40 +318,40 @@ async function run() {
             // 允许做多
             if (canLong && allowLang) {
               // 准备做多单时，此时有当前币种的空方向持仓
-              if (positionShort) {
-                const { unRealizedProfit, entryPrice } = positionShort
-                const positionAmt = Math.abs(positionShort.positionAmt) // 空单为负数，取绝对值
-                const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
-                if (nowProfit < (-loss / 3)) { // 如果空单的收益，已经达到止损的 1/3 了，就立刻平仓，因为此时风向一变
-                  const resultBuy = await binance.buyMarket(symbol, positionAmt, {
-                    positionSide: positionSideShort,
-                  })
-                  if (resultBuy.code) {
-                    // 报错了
-                    notify.notifySellOrderFail(symbol, resultBuy.msg)
-                  } else {
-                    const price = resultBuy ? resultBuy.avgPrice : 0
-                    await tries(async () => await knex('order').insert({
-                      symbol: symbol,
-                      amount: positionAmt,
-                      avg_price: price,
-                      inexact_profit: unRealizedProfit,
-                      positionSide: positionSideShort,
-                      side: 'close',
-                      updateTime: +new Date(),
-                    }))
-                    notify.notifySellOrderSuccess(
-                      symbol,
-                      unRealizedProfit,
-                      price,
-                      '平空',
-                      '反向做多单，空单止损'
-                    )
-                  }
-                  log('反向做多单，空单止损')
-                  log(resultBuy)
-                }
-              }
+              // if (positionShort) {
+              //   const { unRealizedProfit, entryPrice } = positionShort
+              //   const positionAmt = Math.abs(positionShort.positionAmt) // 空单为负数，取绝对值
+              //   const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100
+              //   if (nowProfit < (-loss / 3)) { // 如果空单的收益，已经达到止损的 1/3 了，就立刻平仓，因为此时风向一变
+              //     const resultBuy = await binance.buyMarket(symbol, positionAmt, {
+              //       positionSide: positionSideShort,
+              //     })
+              //     if (resultBuy.code) {
+              //       // 报错了
+              //       notify.notifySellOrderFail(symbol, resultBuy.msg)
+              //     } else {
+              //       const price = resultBuy ? resultBuy.avgPrice : 0
+              //       await tries(async () => await knex('order').insert({
+              //         symbol: symbol,
+              //         amount: positionAmt,
+              //         avg_price: price,
+              //         inexact_profit: unRealizedProfit,
+              //         positionSide: positionSideShort,
+              //         side: 'close',
+              //         updateTime: +new Date(),
+              //       }))
+              //       notify.notifySellOrderSuccess(
+              //         symbol,
+              //         unRealizedProfit,
+              //         price,
+              //         '平空',
+              //         '反向做多单，空单止损'
+              //       )
+              //     }
+              //     log('反向做多单，空单止损')
+              //     log(resultBuy)
+              //   }
+              // }
               
               const { buyPrice } = await getPrice(symbol)
               if (buyOrderShort && buyPrice < buyOrderShort.entryPrice) {
@@ -469,39 +469,39 @@ async function run() {
             // 允许做空
             if (canShort && allowShort) {
               // 准备做多空时，此时有当前币种的多方向持仓
-              if (positionLong) {
-                const { unRealizedProfit, entryPrice, positionAmt } = positionLong
-                const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率
-                if (nowProfit < (-loss / 3)) { // 多单的收益，已经达到止损的 1/3 了，就立刻平仓，因为此时风向一变
-                  const resultSell = await binance.sellMarket(symbol, positionAmt, {
-                    positionSide: positionSide,
-                  })
-                  if (resultSell.code) {
-                    // 报错了
-                    notify.notifySellOrderFail(symbol, resultSell.msg)
-                  } else {
-                    const price = resultSell ? resultSell.avgPrice : 0
-                    await tries(async () => await knex('order').insert({
-                      symbol: symbol,
-                      amount: positionAmt,
-                      avg_price: price,
-                      inexact_profit: unRealizedProfit,
-                      positionSide: positionSide,
-                      side: 'close',
-                      updateTime: +new Date(),
-                    }))
-                    notify.notifySellOrderSuccess(
-                      symbol,
-                      unRealizedProfit,
-                      entryPrice * (1 + nowProfit / 100 / leverage),
-                      '平多',
-                      '反向做空单，多单止损'
-                    )
-                  }
-                  log('反向做空单，多单止损')
-                  log(resultSell)
-                }
-              }
+              // if (positionLong) {
+              //   const { unRealizedProfit, entryPrice, positionAmt } = positionLong
+              //   const nowProfit = (unRealizedProfit / (positionAmt * entryPrice)) * leverage * 100 // 当前收益率
+              //   if (nowProfit < (-loss / 3)) { // 多单的收益，已经达到止损的 1/3 了，就立刻平仓，因为此时风向一变
+              //     const resultSell = await binance.sellMarket(symbol, positionAmt, {
+              //       positionSide: positionSide,
+              //     })
+              //     if (resultSell.code) {
+              //       // 报错了
+              //       notify.notifySellOrderFail(symbol, resultSell.msg)
+              //     } else {
+              //       const price = resultSell ? resultSell.avgPrice : 0
+              //       await tries(async () => await knex('order').insert({
+              //         symbol: symbol,
+              //         amount: positionAmt,
+              //         avg_price: price,
+              //         inexact_profit: unRealizedProfit,
+              //         positionSide: positionSide,
+              //         side: 'close',
+              //         updateTime: +new Date(),
+              //       }))
+              //       notify.notifySellOrderSuccess(
+              //         symbol,
+              //         unRealizedProfit,
+              //         entryPrice * (1 + nowProfit / 100 / leverage),
+              //         '平多',
+              //         '反向做空单，多单止损'
+              //       )
+              //     }
+              //     log('反向做空单，多单止损')
+              //     log(resultSell)
+              //   }
+              // }
               
               const { sellPrice } = await getPrice(symbol)
               if (buyOrder && sellPrice > buyOrder.entryPrice) {
