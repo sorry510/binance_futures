@@ -19,11 +19,11 @@ async function getCoins(allSymbols) {
   const sortSymbols = filterSymbols
     .map(item => ({ ...item, percentChange: Number(item.percentChange) }))
     .sort((a, b) => (a.percentChange < b.percentChange ? -1 : 1)) // 涨幅从小到大排序
-  
-  const rand1 = getRndInteger(0, Math.min(8, sortSymbols.length))
-  const rand2 = getRndInteger(0, Math.min(8, sortSymbols.length))
-  const rand3 = getRndInteger(Math.max(sortSymbols.length - 8, 0), sortSymbols.length)
-  const rand4 = getRndInteger(Math.max(sortSymbols.length - 8, 0), sortSymbols.length)
+    
+  const rand1 = getRndInteger(0, Math.min(6, sortSymbols.length))
+  const rand2 = getRndInteger(0, Math.min(6, sortSymbols.length))
+  const rand3 = getRndInteger(Math.max(sortSymbols.length - 6, 0), sortSymbols.length)
+  const rand4 = getRndInteger(Math.max(sortSymbols.length - 6, 0), sortSymbols.length)
   
   const midInt = parseInt(sortSymbols.length/ 2)
   
