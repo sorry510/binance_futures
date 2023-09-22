@@ -26,7 +26,7 @@ async function getLongOrShort(symbol) {
     let canLong = false
     let canShort = false
     
-    const kline_3m = await binance.getKlineOrigin(symbol, '3m', 50)
+    const kline_3m = await binance.getKlineOrigin(symbol, '3m', 40) // 2小时的 kline
     // const kline_1m = await binance.getKlineOrigin(symbol, '1m', 10)
     
     const line3m_result = normalizationLineData(kline_3m)
