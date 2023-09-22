@@ -175,7 +175,9 @@ app.get('/orders', async (req, res) => {
       sort = '+',
       symbol,
       page = 1,
-      limit = 10,
+      limit = 20,
+      start_time,
+      end_time,
     },
   } = req
   const orders = await tries(async () => {
@@ -183,6 +185,12 @@ app.get('/orders', async (req, res) => {
     
     if (symbol) {
       query.where('symbol', 'like', `%${symbol.toUpperCase()}%`)
+    }
+    if (start_time) {
+      query.where('updateTime', '>=', start_time)
+    }
+    if (end_time) {
+      query.where('updateTime', '<=', end_time)
     }
     
     const total = await query.clone().count({count: '*'})
