@@ -202,8 +202,8 @@ function checkLongLine3m(data) {
       // isAsc(ma3List.slice(minIndex, minIndex + 8)) && // 最低点的前8个在跌
       line.slice(minIndex, minIndex + 8).filter(item => item.position === 'short').length >= 7 && // 最低点的line之前的8个中最多有一个line是红线
       linePoint.position === 'short' && // 最低点的line是红线
-      underLength > upperLength && // 下影线长度 > 上影线长度
-      entityLength / allLength < 0.5 && // 实体长度 < 0.5
+      // underLength > upperLength && // 下影线长度 > 上影线长度
+      entityLength / allLength < 0.6 && // 实体长度 < 0.5
       true // 占位
     ) {
       return true
@@ -227,8 +227,8 @@ function checkShortLine3m(data) {
       // isDesc(ma3List.slice(maxIndex, maxIndex + 8)) &&
       line.slice(maxIndex, maxIndex + 8).filter(item => item.position === 'long').length >= 7 && // 最高点的line之前的8个中最多有一个line是绿线
       linePoint.position === 'long' &&
-      underLength < upperLength && // 下影线长度 < 上影线长度
-      entityLength / allLength < 0.5 && // 实体长度 < 0.5
+      // underLength < upperLength && // 下影线长度 < 上影线长度
+      entityLength / allLength < 0.6 && // 实体长度 < 0.5
       true // 占位
     ) {
       return true
