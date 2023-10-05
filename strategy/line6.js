@@ -190,6 +190,7 @@ function checkLongLine3m(data) {
     if (
       isDesc(ma3List.slice(0, minIndex)) && // 最近 ma 在上涨
       isAsc(ma3List.slice(minIndex, minIndex + 8)) && // 之前 ma 在下跌
+      line.slice(minIndex, minIndex + 8).filter(item => item.position === 'short').length >= 7 && // 最低点的line之前的8个中最多有一个line是红线
       linePoint.position === 'short' &&
       Math.abs(linePoint.close - linePoint.min) > Math.abs(linePoint.open - linePoint.close) &&
       // line.slice(0, minIndex).filter(item => item.position === 'long').length >= minIndex - 1 && //
@@ -209,6 +210,7 @@ function checkShortLine3m(data) {
     if (
       isAsc(ma3List.slice(0, maxIndex)) &&
       isDesc(ma3List.slice(maxIndex, maxIndex + 8)) &&
+      line.slice(maxIndex, maxIndex + 8).filter(item => item.position === 'long').length >= 7 && // 最高点的line之前的8个中最多有一个line是绿线
       linePoint.position === 'long' &&
       Math.abs(linePoint.max - linePoint.close) > Math.abs(linePoint.close - linePoint.open) &&
       // line.slice(0, maxIndex).filter(item => item.position === 'short').length >= maxIndex - 1 &&
