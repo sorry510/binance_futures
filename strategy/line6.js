@@ -183,14 +183,15 @@ function normalizationLineData(data, slice = 1) {
 
 function checkLongLine3m(data) {
   const { maxIndex, minIndex, line } = data
+  const len = 10
   if (minIndex >= 1 && minIndex <= 3 && maxIndex >= 10) {
     // 最低点在9分前，最高点之前30分
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     const linePoint = line[minIndex]
     if (
       isDesc(ma3List.slice(0, minIndex)) && // 最近 ma 在上涨
-      isAsc(ma3List.slice(minIndex, minIndex + 8)) && // 之前 ma 在下跌
-      line.slice(minIndex, minIndex + 8).filter(item => item.position === 'short').length >= 7 && // 最低点的line之前的8个中最多有一个line是红线
+      isAsc(ma3List.slice(minIndex, minIndex + len)) && // 之前 ma 在下跌
+      line.slice(minIndex, minIndex + len).filter(item => item.position === 'short').length >= len - 1 && // 最低点的line之前的8个中最多有一个line是红线
       linePoint.position === 'short' &&
       Math.abs(linePoint.close - linePoint.min) > Math.abs(linePoint.open - linePoint.close) &&
       // line.slice(0, minIndex).filter(item => item.position === 'long').length >= minIndex - 1 && //
@@ -204,13 +205,14 @@ function checkLongLine3m(data) {
 
 function checkShortLine3m(data) {
   const { maxIndex, minIndex, line } = data
+  const len = 10
   if (maxIndex >= 1 && maxIndex <= 3 && minIndex <= 10) {
     const ma3List = maNList(line.map(item => item.close), 3, 20) // 3min kline 最近20条，不包含最近3min
     const linePoint = line[maxIndex]
     if (
       isAsc(ma3List.slice(0, maxIndex)) &&
-      isDesc(ma3List.slice(maxIndex, maxIndex + 8)) &&
-      line.slice(maxIndex, maxIndex + 8).filter(item => item.position === 'long').length >= 7 && // 最高点的line之前的8个中最多有一个line是绿线
+      isDesc(ma3List.slice(maxIndex, maxIndex + len)) &&
+      line.slice(maxIndex, maxIndex + len).filter(item => item.position === 'long').length >= len - 1 && // 最高点的line之前的8个中最多有一个line是绿线
       linePoint.position === 'long' &&
       Math.abs(linePoint.max - linePoint.close) > Math.abs(linePoint.close - linePoint.open) &&
       // line.slice(0, maxIndex).filter(item => item.position === 'short').length >= maxIndex - 1 &&
