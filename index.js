@@ -3,7 +3,7 @@ const fs = require('fs')
 const { round } = require('mathjs')
 const { sleep, log, roundOrderPrice, roundOrderQuantity, tries } = require('./utils')
 const { knex } = require('./db')
-const { usdt, profit, loss = 100, leverage, buyTimeOut, sleep_time, excludeSymbols = [], strategy, strategyCoin, maxCount = 10, allowLang = true, allowShort = true } = require('./config')
+const { usdt, profit, loss = 100, leverage, buyTimeOut, sleep_time, excludeSymbols = [], strategy, strategyCoin, maxCount = 10, allowLong = true, allowShort = true } = require('./config')
 const notify = require('./notify')
 const binance = require('./binance')
 const { getLongOrShort, canOrderComplete, autoStop } = require(`./strategy/${strategy}`)
@@ -316,7 +316,7 @@ async function run() {
           // 没有持仓，没有挂买单
           if (!buyOrder) {
             // 允许做多
-            if (canLong && allowLang) {
+            if (canLong && allowLong) {
               // 准备做多单时，此时有当前币种的空方向持仓
               // if (positionShort) {
               //   const { unRealizedProfit, entryPrice } = positionShort
