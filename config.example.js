@@ -7,13 +7,14 @@ module.exports = {
   profit: 10, // 止盈率
   loss: 10, // 止损率
   leverage: 15, // 合约倍数
-  buyTimeOut: 120, // 挂单购买的超时时间
-  excludeSymbols: ['SANDUSDT'], // 排除自动平仓的币
+  buyTimeOut: 60 * 5, // 挂单购买的超时时间, 秒级别, 默认5分钟
+  excludeSymbols: ['SANDUSDT'], // 排除使用本程序自动交易的币种
   cha: [0, 20], // 差值(废弃)
   maxCount: 5, // 同时开仓的最大数量
   allowLong: true, // 允许做多
   allowShort: true, // 允许做空
-  holdMaxTime: 60 * 24 * 30, // 持仓的最长时间, 分钟级别, 默认30天
+  buyType: 'MARKET', // 下单类型, MARKET 市价, LIMIT: 限价(根据价格深度取平均价挂单，有可能无法买入)
+  holdMaxTime: 60 * 24, // 持仓的最长时间, 分钟级别, 默认24小时
 
   dingding_token: '',
   dingding_word: '报警',
