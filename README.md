@@ -22,6 +22,9 @@ cp config.js.example config.js // 需自行修改交易配置
 cp data/data.db.example data/data.db // 创建数据库
 ```
 
+### 使用前注意事项
+> 如果你的账号本身已经有合约仓位，请一定要在 config.js 文件中配 excludeSymbols, 排出掉你不想使用本程序自动交易的币，否则默认所有的仓位都会根据交易策略规则自动平仓
+
 ### start
 
 ```
