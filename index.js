@@ -250,7 +250,7 @@ async function run() {
         canLong // 策略结果是可以做多
       ) {
         const { buyPrice } = await getPrice(symbol) // 根据深度获取到的合适价格
-        if (buyOrderShort && buyPrice < buyOrderShort.entryPrice) {
+        if (buyOrderShort && buyPrice < buyOrderShort.avgPrice) {
           // 如果买单价格低于买空的价格，就不再买入，直到空单平仓
           return
         }
@@ -295,7 +295,7 @@ async function run() {
         canShort // 策略结果是可以做空
       ) {
         const { sellPrice } = await getPrice(symbol)
-        if (buyOrder && sellPrice > buyOrder.entryPrice) {
+        if (buyOrder && sellPrice > buyOrder.avgPrice) {
           // 如果空单开除价格高于买多的价格，就不再开空单，直到买多的单平仓
           return
         }
