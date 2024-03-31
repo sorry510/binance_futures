@@ -226,6 +226,10 @@ async function run() {
       const positionSide = 'LONG'
       const positionSideShort = 'SHORT'
       let { symbol } = coin
+      if (excludeOrderSymbols.has(symbol)) {
+        // 白名单不开仓
+        return;
+      }
 
       const { canLong, canShort } = await getLongOrShort(symbol)
 
