@@ -227,7 +227,7 @@ async function run() {
       const positionSideShort = 'SHORT'
       let { symbol } = coin
       if (excludeOrderSymbols.has(symbol)) {
-        // 白名单不开仓
+        // 白名单内不开仓
         return;
       }
 
@@ -235,6 +235,7 @@ async function run() {
 
       if (!canLong && !canShort) {
         log(symbol + ':没有达到条件不可开仓')
+        return;
       }
 
       const buyOrder = allOpenOrders.find(
