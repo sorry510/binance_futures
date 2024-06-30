@@ -2,6 +2,9 @@
 - 自动交易
 - 交易策略看 strategy 目录源码
 
+## 以停止开发此项目, 使用 golang 重新开发
+- 新项目地址[币安合约自动交易](https://github.com/sorry510/go_binance_futures)
+
 ## image
 ![交易币种](./img/coins.jpg)
 ![交易配置](./img/config.jpg)
